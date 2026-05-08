@@ -1,8 +1,7 @@
 services:
 
   postgres:
-    build: ./Central_Hospital/
-    image: postgres:15
+    image: postgres:18
     container_name: postgres
     ports:
       - "6000:5432"
