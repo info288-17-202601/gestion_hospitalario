@@ -1,0 +1,26 @@
+services:
+
+  postgres:
+    build: ./Central_Hospital/
+    image: postgres:15
+    container_name: postgres
+    ports:
+      - "6000:5432"
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: gestion_hospitalario
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      PGDATA: /var/lib/postgresql/data/pgdata
+      TZ: America/Santiago
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/pgdata
+      - ./Central_Hospital/Data_Base/init_test.sql:/docker-entrypoint-initdb.d/init_test.sql
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
