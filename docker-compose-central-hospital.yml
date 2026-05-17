@@ -24,6 +24,25 @@ services:
     networks:
       - hospital_network
 
+  authentication:
+    image: authentication_service
+    build: ./Central_Hospital/Authentication
+    container_name: authentication_service
+    ports:
+      - "7050:7050"
+    environment:
+      - TZ=America/Santiago
+      - POSTGRES_SERVER=postgres
+      - POSTGRES_PORT=6000
+    env_file:
+      - ./Central_Hospital/Authentication/.env
+    networks:
+      - hospital_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
 networks:
   hospital_network:
     driver: bridge
