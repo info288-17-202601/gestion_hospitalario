@@ -72,6 +72,35 @@ CREATE TABLE inventory_movements (
     destination_department_id INT REFERENCES departments(id)
 );
 
+-- Crear tabla rfid_cards (Depende de users)
+CREATE TABLE rfid_cards (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id),
+    uid VARCHAR(100) UNIQUE NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Crear tabla user_pin_credentials (Depende de users)
+CREATE TABLE user_pin_credentials (
+    id SERIAL PRIMARY KEY,
+    user_id INT UNIQUE NOT NULL REFERENCES users(id),
+    pin_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Crear tabla auth_logs (Depende de users)
+CREATE TABLE auth_logs (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id),
+    auth_method VARCHAR(50) NOT NULL,
+    uid_attempt VARCHAR(100),
+    success BOOLEAN NOT NULL,
+    reason TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
 -- ==========================================
 -- INSERTAR DATOS DE PRUEBA
 -- ==========================================
@@ -110,3 +139,11 @@ INSERT INTO department_inventory (department_id, supply_id, quantity) VALUES
 INSERT INTO inventory_movements (type, quantity, observations, user_id, supply_id, origin_department_id, destination_department_id) VALUES
 ('entrada', 1000.00, 'Recepción inicial a farmacia', 2, 1, NULL, 3),
 ('transferencia', 50.00, 'Envío de jeringas a urgencias', 2, 1, 3, 1);
+
+-- 7. Tarjeta RFID asociada a Juan Pérez
+INSERT INTO rfid_cards (user_id, uid, is_active) VALUES
+(1, 'A1B2C3D4', true);
+
+-- 8. PIN hasheado de prueba
+INSERT INTO user_pin_credentials (user_id, pin_hash) VALUES
+(1, 'hashed_pin_1234');

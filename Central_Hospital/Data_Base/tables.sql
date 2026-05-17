@@ -71,3 +71,32 @@ CREATE TABLE inventory_movements (
     origin_department_id INT REFERENCES departments(id),
     destination_department_id INT REFERENCES departments(id)
 );
+
+--8. Crear tabla rfid_cards (Depende de users)
+CREATE TABLE rfid_cards (
+    id SERIAL PRIMARY KEY,
+    user_id INT NOT NULL REFERENCES users(id),
+    uid VARCHAR(100) UNIQUE NOT NULL,
+    is_active BOOLEAN DEFAULT true,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+--9. Crear tabla user_pin_credentials (Depende de users)
+CREATE TABLE user_pin_credentials (
+    id SERIAL PRIMARY KEY,
+    user_id INT UNIQUE NOT NULL REFERENCES users(id),
+    pin_hash VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+--10. Crear tabla auth_logs (Depende de users)
+CREATE TABLE auth_logs (
+    id SERIAL PRIMARY KEY,
+    user_id INT REFERENCES users(id),
+    auth_method VARCHAR(50) NOT NULL,
+    uid_attempt VARCHAR(100),
+    success BOOLEAN NOT NULL,
+    reason TEXT,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
