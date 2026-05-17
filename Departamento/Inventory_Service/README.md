@@ -15,6 +15,7 @@ The following parameters must be specified in the `.env` file for the applicatio
 - `POSTGRES_SERVER`: The hostname or IP address of the PostgreSQL database. Use `localhost` if running outside of Docker, or the container name (e.g., `postgres` or the specific docker-compose service name) if running inside a Docker network.
 - `POSTGRES_PORT`: The port number on which the PostgreSQL database is listening (e.g., `5432`). Note that if running against docker locally you may map it differently, so adjust accordingly.
 - `POSTGRES_DB`: The name of the target database (e.g., `gestion_hospitalario`).
+- `DEPARTMENT_ID`: The fixed ID of the department this service instance belongs to (e.g., `1`). This is injected securely so users cannot modify stock of other departments.
 
 ### Example `.env` file
 
@@ -24,17 +25,59 @@ POSTGRES_PASSWORD=postgres
 POSTGRES_SERVER=localhost
 POSTGRES_PORT=5432
 POSTGRES_DB=gestion_hospitalario
+DEPARTMENT_ID=1
 ```
 
-## Running the Application
+## Building and Running the Application
 
-1. Make sure you have your dependencies installed:
-   ```bash
-   pip install -r requirements.txt
-   ```
-2. Start the FastAPI server:
-   ```bash
-   uvicorn app.main:app --reload
-   ```
-3. Visit the automatic interactive API documentation (Swagger UI) at:
-   [http://localhost:8000/docs](http://localhost:8000/docs)
+This service is built using **Go (Golang)**. Follow these steps to build and run the project:
+
+### 1. Install Dependencies
+
+First, download all the required Go modules and the Swagger CLI tool:
+
+```bash
+# Download project dependencies
+go mod tidy
+go mod download
+
+# Install Swaggo CLI (required to generate API documentation)
+go install github.com/swaggo/swag/cmd/swag@latest
+```
+
+> **Note:** Ensure your `~/go/bin` (or `$(go env GOPATH)/bin`) is added to your system's `PATH` to run the `swag` command easily.
+
+### 2. Generate Swagger Documentation
+
+Before building the project, whenever you modify handler comments, you must regenerate the Swagger documentation:
+
+```bash
+# If swag is in your PATH:
+swag init -g cmd/server/main.go
+
+# If swag is NOT in your PATH:
+$(go env GOPATH)/bin/swag init -g cmd/server/main.go
+```
+
+This will create/update the `docs/` folder containing the `swagger.json` and `swagger.yaml` files.
+
+### 3. Compile the Application
+
+Build the Go binary to ensure optimal performance:
+
+```bash
+go build -o inventory_service_bin ./cmd/server
+```
+
+### 4. Run the Service
+
+Execute the compiled binary:
+
+```bash
+./inventory_service_bin
+```
+
+### 5. View Documentation
+
+Once the server is running, visit the interactive Swagger UI documentation at:
+[http://localhost:7010/docs/index.html](http://localhost:7010/docs/index.html)

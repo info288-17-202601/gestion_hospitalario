@@ -1,0 +1,194 @@
+{
+    "swagger": "2.0",
+    "info": {
+        "description": "API for the Hospital's inventory management.",
+        "title": "Inventory Service API",
+        "contact": {},
+        "version": "1.0"
+    },
+    "host": "localhost:8000",
+    "basePath": "/api/v1",
+    "paths": {
+        "/inventory/departments/stock": {
+            "post": {
+                "description": "Modifies the stock of a supply for a specific department (increase or decrease)",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inventory"
+                ],
+                "summary": "Modify department stock",
+                "parameters": [
+                    {
+                        "description": "Stock modification data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schemas.StockModificationRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Successful operation",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.OperationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Department or supply not found",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/inventory/movement": {
+            "post": {
+                "description": "Registers a general movement in the inventory",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inventory"
+                ],
+                "summary": "Register an inventory movement",
+                "parameters": [
+                    {
+                        "description": "Movement data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schemas.MovementRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Movement successfully registered",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.OperationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "definitions": {
+        "schemas.MovementRequest": {
+            "type": "object",
+            "required": [
+                "destination_department_id",
+                "origin_department_id",
+                "quantity",
+                "supply_id",
+                "user_id"
+            ],
+            "properties": {
+                "destination_department_id": {
+                    "type": "integer"
+                },
+                "observations": {
+                    "type": "string"
+                },
+                "origin_department_id": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "supply_id": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        },
+        "schemas.OperationResponse": {
+            "type": "object",
+            "properties": {
+                "message": {
+                    "type": "string"
+                },
+                "movement_id": {
+                    "type": "integer"
+                },
+                "status": {
+                    "type": "string"
+                }
+            }
+        },
+        "schemas.StockModificationRequest": {
+            "type": "object",
+            "required": [
+                "quantity_change",
+                "supply_id",
+                "user_id"
+            ],
+            "properties": {
+                "observations": {
+                    "type": "string"
+                },
+                "quantity_change": {
+                    "type": "number"
+                },
+                "supply_id": {
+                    "type": "integer"
+                },
+                "user_id": {
+                    "type": "integer"
+                }
+            }
+        }
+    }
+}

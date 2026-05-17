@@ -7,3 +7,8 @@ __pycache__
 
 # Postgres
 postgres_data/
+
+# Go
+*.bin
+*_bin
+*bin

@@ -1,0 +1,130 @@
+basePath: /api/v1
+definitions:
+  schemas.MovementRequest:
+    properties:
+      destination_department_id:
+        type: integer
+      observations:
+        type: string
+      origin_department_id:
+        type: integer
+      quantity:
+        type: number
+      supply_id:
+        type: integer
+      user_id:
+        type: integer
+    required:
+    - destination_department_id
+    - origin_department_id
+    - quantity
+    - supply_id
+    - user_id
+    type: object
+  schemas.OperationResponse:
+    properties:
+      message:
+        type: string
+      movement_id:
+        type: integer
+      status:
+        type: string
+    type: object
+  schemas.StockModificationRequest:
+    properties:
+      observations:
+        type: string
+      quantity_change:
+        type: number
+      supply_id:
+        type: integer
+      user_id:
+        type: integer
+    required:
+    - quantity_change
+    - supply_id
+    - user_id
+    type: object
+host: localhost:8000
+info:
+  contact: {}
+  description: API for the Hospital's inventory management.
+  title: Inventory Service API
+  version: "1.0"
+paths:
+  /inventory/departments/stock:
+    post:
+      consumes:
+      - application/json
+      description: Modifies the stock of a supply for a specific department (increase
+        or decrease)
+      parameters:
+      - description: Stock modification data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.StockModificationRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successful operation
+          schema:
+            $ref: '#/definitions/schemas.OperationResponse'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Department or supply not found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Validation error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Modify department stock
+      tags:
+      - inventory
+  /inventory/movement:
+    post:
+      consumes:
+      - application/json
+      description: Registers a general movement in the inventory
+      parameters:
+      - description: Movement data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.MovementRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movement successfully registered
+          schema:
+            $ref: '#/definitions/schemas.OperationResponse'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Validation error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register an inventory movement
+      tags:
+      - inventory
+swagger: "2.0"
