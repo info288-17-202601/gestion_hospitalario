@@ -1,0 +1,118 @@
+basePath: /api/v1
+definitions:
+  schemas.LoginClassicRequest:
+    properties:
+      password:
+        type: string
+      rut:
+        type: string
+    required:
+    - password
+    - rut
+    type: object
+  schemas.LoginRFIDRequest:
+    properties:
+      pin:
+        type: string
+      uid:
+        type: string
+    required:
+    - pin
+    - uid
+    type: object
+  schemas.TokenResponse:
+    properties:
+      access_token:
+        type: string
+      token_type:
+        type: string
+      user:
+        $ref: '#/definitions/schemas.UserResponse'
+    type: object
+  schemas.UserResponse:
+    properties:
+      department_id:
+        type: integer
+      id:
+        type: integer
+      name:
+        type: string
+      role:
+        type: string
+    type: object
+host: localhost:7050
+info:
+  contact: {}
+  description: API for Hospital user authentication (Dual Login).
+  title: Authentication Service API
+  version: "1.0"
+paths:
+  /auth/login/classic:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user with RUT and password, returns JWT token
+      parameters:
+      - description: Login credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.LoginClassicRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully authenticated
+          schema:
+            $ref: '#/definitions/schemas.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login via RUT and Password
+      tags:
+      - authentication
+  /auth/login/rfid:
+    post:
+      consumes:
+      - application/json
+      description: Authenticates a user using RFID card UID and PIN, returns JWT token
+      parameters:
+      - description: RFID credentials
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.LoginRFIDRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Successfully authenticated
+          schema:
+            $ref: '#/definitions/schemas.TokenResponse'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "401":
+          description: Unauthorized
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Login via RFID and PIN
+      tags:
+      - authentication
+swagger: "2.0"
