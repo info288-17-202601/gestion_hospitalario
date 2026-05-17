@@ -1,0 +1,19 @@
+services:
+
+  inventory_service:
+    image: inventory_service
+    build: ./Departamento/Inventory_Service
+    container_name: inventory_service
+    ports:
+      - "7010:7010"
+    environment:
+      - TZ=America/Santiago
+    env_file:
+      - ./Departamento/Inventory_Service/.env
+    restart: unless-stopped
+    networks:
+      - hospital_network
+
+networks:
+  hospital_network:
+    driver: bridge
