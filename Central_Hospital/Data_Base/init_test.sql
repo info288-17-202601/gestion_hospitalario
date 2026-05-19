@@ -142,8 +142,8 @@ INSERT INTO inventory_movements (type, quantity, observations, user_id, supply_i
 
 -- 7. Tarjeta RFID asociada a Juan Pérez
 INSERT INTO rfid_cards (user_id, uid, is_active) VALUES
-(1, 'A1B2C3D4', true);
+(1, '234BA711', true);
 
 -- 8. PIN hasheado de prueba
 INSERT INTO user_pin_credentials (user_id, pin_hash) VALUES
-(1, 'hashed_pin_1234');
+(1, '1234');
