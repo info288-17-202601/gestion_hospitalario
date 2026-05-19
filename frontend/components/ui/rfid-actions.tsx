@@ -3,17 +3,14 @@
 import { spawn } from "child_process"
 
 export async function runRfidBridge() {
-  const bridgePath =
-    "/home/lombrices/Documentos/Sistemas distribuidos/gestion_hospitalario/rfid_bridge"
-    const goPath = "../../snap/bin/go"
-
+  const bridgePath = "../rfid_bridge"
   return new Promise<{
     success: boolean
     message: string
     output?: string
     error?: string
   }>((resolve) => {
-    const process = spawn("go", ["run", "main.go", "--mock"], {
+    const process = spawn("go", ["run", "main.go"], {
       cwd: bridgePath,
       shell: false,
     })
