@@ -5,18 +5,19 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"go.bug.st/serial"
 	"io"
 	"net/http"
+	"os"
 	"strings"
 	"time"
-	"os"
-	"go.bug.st/serial"
 )
 
 const (
-	SerialPort = "/dev/ttyACM0" 
-	BaudRate   = 9600
-	APIURL     = "http://localhost:7050/api/v1/auth/login/rfid"
+	SerialPort     = "/dev/ttyACM0"
+	BaudRate       = 9600
+	APIURL         = "http://localhost:7050/api/v1/auth/login/rfid"
+	ConnectTimeout = 60 * time.Second
 )
 
 type RFIDLoginRequest struct {
@@ -53,13 +54,17 @@ func sendToBackend(payload RFIDLoginRequest) error {
 }
 
 func main() {
-	if len(os.Args) > 1 && os.Args[1] == "--mock" {
+	modeArg := "serve"
+	if len(os.Args) > 1 {
+		modeArg = os.Args[1]
+	}
+
+	if modeArg == "--mock" || modeArg == "mock" {
 		fmt.Println("Modo mock RFID iniciado")
 
 		payload := RFIDLoginRequest{
 			UID: "234BA711",
 			PIN: "1234",
-			
 		}
 
 		err := sendToBackend(payload)
@@ -72,20 +77,40 @@ func main() {
 		return
 	}
 
-	mode := &serial.Mode{
-		BaudRate: BaudRate,
-	}
-
-	port, err := serial.Open(SerialPort, mode)
-	if err != nil {
-		fmt.Println("Error abriendo puerto serial:", err)
+	if modeArg != "serve" {
+		fmt.Println("Modo desconocido:", modeArg)
 		return
 	}
-	defer port.Close()
 
 	fmt.Println("Bridge RFID iniciado")
 	fmt.Println("Puerto serial:", SerialPort)
 	fmt.Println("Backend:", APIURL)
+
+	deadline := time.Now().Add(ConnectTimeout)
+	var port io.ReadCloser
+	for {
+		serialMode := &serial.Mode{
+			BaudRate: BaudRate,
+		}
+
+		p, err := serial.Open(SerialPort, serialMode)
+		if err != nil {
+			if time.Now().After(deadline) {
+				fmt.Println("No esta conectado el lector, tiempo de espera agotado")
+				fmt.Println("RFID_CONNECTION_TIMEOUT")
+				os.Exit(1)
+			}
+
+			fmt.Println("No esta conectado el lector, esperando conexion...")
+			time.Sleep(2 * time.Second)
+			continue
+		}
+
+		port = p
+		break
+	}
+	defer port.Close()
+
 	fmt.Println("Esperando datos del Arduino...")
 
 	scanner := bufio.NewScanner(port)

@@ -2,8 +2,8 @@
 
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
-import { Hospital, CreditCard, Lock, User, KeyRound, AlertCircle, CheckCircle } from 'lucide-react'
-import { loginWithPassword, loginWithRfid } from '@/lib/services'
+import { Hospital, CreditCard, Lock, User, AlertCircle, CheckCircle } from 'lucide-react'
+import { loginWithPassword } from '@/lib/services'
 import { runRfidBridge } from "../../components/ui/rfid-actions"
 
 type Tab = 'password' | 'rfid'
@@ -18,45 +18,65 @@ export default function LoginPage() {
   const [password, setPassword] = useState('')
 
   // RFID form
-  const [uid, setUid] = useState('')
-  const [pin, setPin] = useState('')
 
   const [message, setMessage] = useState<{ type: MessageType; text: string } | null>(null)
   const [loading, setLoading] = useState(false)
+  const [retryRfid, setRetryRfid] = useState(false)
 
-  const handleRfidLogin = async (e: React.FormEvent) => {
-    e.preventDefault()
+  const handleRfidLogin = async (e?: React.FormEvent) => {
+    e?.preventDefault()
     setLoading(true)
+    setRetryRfid(false)
     setMessage({
-      type: "success",
-      text: "Esperando logeo con tarjeta, acerque su tarjeta al lector",
+      type: 'success',
+      text: 'Esperando logeo con tarjeta, acerque su tarjeta al lector',
     })
 
     try {
       const result = await runRfidBridge()
 
       if (result.success) {
-        setMessage({
-          type: "success",
-          text: "Acceso exitoso. Redirigiendo...",
-        })
+        const sessionUser = result.user
+          ? {
+              id: result.user.id,
+              name: result.user.name,
+              role: result.user.role as any,
+              department: `Departamento ${result.user.department_id}`,
+              rut: '',
+            }
+          : {
+              id: 0,
+              name: 'Usuario RFID',
+              role: 'Farmacéutico',
+              department: 'RFID',
+              rut: '',
+            }
 
-        const env = sessionStorage.getItem("sghd_environment") || "central"
-        const redirectPath = env === "nodo" ? "/nodo/dashboard" : "/dashboard"
+        sessionStorage.setItem('sghd_user', JSON.stringify(sessionUser))
+        setMessage({ type: 'success', text: 'Acceso exitoso. Redirigiendo...' })
 
-        setTimeout(() => router.push(redirectPath), 800)
+        const env = sessionStorage.getItem('sghd_environment') || 'central'
+        const redirectPath = env === 'nodo' ? '/nodo/dashboard' : '/dashboard'
+
+        router.push(redirectPath)
       } else {
-        setMessage({
-          type: "error",
-          text: result.message || "No se pudo iniciar sesión con la tarjeta.",
-        })
+        const text = result.message || 'No se pudo iniciar sesión con la tarjeta.'
+        setMessage({ type: 'error', text })
+        if (
+          text.includes('No esta conectado') ||
+          text.includes('esperando conexion') ||
+          text.includes('tiempo de espera agotado') ||
+          text.includes('RFID_CONNECTION_TIMEOUT')
+        ) {
+          setRetryRfid(true)
+        }
       }
     } catch (error) {
       setMessage({
-        type: "error",
-        text: "Error al conectar con el lector RFID/NFC.",
+        type: 'error',
+        text: 'Error al conectar con el lector RFID/NFC.',
       })
-
+      setRetryRfid(true)
       console.error(error)
     } finally {
       setLoading(false)
@@ -212,8 +232,18 @@ export default function LoginPage() {
                   disabled={loading}
                   className="mt-1 w-full rounded-md bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
                 >
-                  {loading ? "Esperando logeo con tarjeta..." : "Logearse con tarjeta"}
+                  {loading ? 'Esperando logeo con tarjeta...' : 'Logearse con tarjeta'}
                 </button>
+                {retryRfid && (
+                  <button
+                    type="button"
+                    onClick={handleRfidLogin}
+                    disabled={loading}
+                    className="mt-2 w-full rounded-md border border-border bg-background py-2.5 text-sm font-semibold text-foreground transition-colors hover:bg-secondary disabled:opacity-60"
+                  >
+                    Reintentar conexión
+                  </button>
+                )}
               </form>
             )}
           </div>
