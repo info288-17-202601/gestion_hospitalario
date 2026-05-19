@@ -9,7 +9,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
-
+	"os"
 	"go.bug.st/serial"
 )
 
@@ -31,7 +31,7 @@ func sendToBackend(payload RFIDLoginRequest) error {
 	}
 
 	client := &http.Client{
-		Timeout: 5 * time.Second,
+		Timeout: 15 * time.Second,
 	}
 
 	resp, err := client.Post(APIURL, "application/json", bytes.NewBuffer(body))
@@ -41,15 +41,37 @@ func sendToBackend(payload RFIDLoginRequest) error {
 	defer resp.Body.Close()
 
 	responseBody, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
+		return fmt.Errorf("login RFID falló. Status: %d, Body: %s", resp.StatusCode, string(responseBody))
+	}
 
 	fmt.Println("\n--- Respuesta del backend ---")
 	fmt.Println("Status:", resp.StatusCode)
-	fmt.Println("Body:", string(responseBody))
+	fmt.Println("RFID_LOGIN_RESPONSE:" + string(responseBody))
 
 	return nil
 }
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "--mock" {
+		fmt.Println("Modo mock RFID iniciado")
+
+		payload := RFIDLoginRequest{
+			UID: "234BA711",
+			PIN: "1234",
+			
+		}
+
+		err := sendToBackend(payload)
+		if err != nil {
+			fmt.Println("RFID_LOGIN_ERROR:", err)
+			return
+		}
+
+		fmt.Println("RFID_LOGIN_SUCCESS")
+		return
+	}
+
 	mode := &serial.Mode{
 		BaudRate: BaudRate,
 	}
@@ -99,8 +121,12 @@ func main() {
 
 		err = sendToBackend(payload)
 		if err != nil {
-			fmt.Println("Error enviando al backend:", err)
+			fmt.Println("RFID_LOGIN_ERROR:", err)
+			continue
 		}
+
+		fmt.Println("RFID_LOGIN_SUCCESS")
+		return
 	}
 
 	if err := scanner.Err(); err != nil {
