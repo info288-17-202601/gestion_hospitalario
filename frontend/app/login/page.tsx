@@ -29,7 +29,7 @@ export default function LoginPage() {
     setRetryRfid(false)
     setMessage({
       type: 'success',
-      text: 'Esperando logeo con tarjeta, acerque su tarjeta al lector',
+      text: 'Esperando conexion con el lector',
     })
 
     try {
@@ -63,6 +63,7 @@ export default function LoginPage() {
         const text = result.message || 'No se pudo iniciar sesión con la tarjeta.'
         setMessage({ type: 'error', text })
         if (
+          text.includes('No se pudo establecer conexion') ||
           text.includes('No esta conectado') ||
           text.includes('esperando conexion') ||
           text.includes('tiempo de espera agotado') ||

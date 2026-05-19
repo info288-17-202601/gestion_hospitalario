@@ -3,7 +3,7 @@
 import { spawn } from "child_process"
 
 export async function runRfidBridge() {
-  const bridgePath = "../../../rfid_bridge"
+  const bridgePath = "../rfid_bridge"
   return new Promise<{
     success: boolean
     message: string
@@ -22,13 +22,29 @@ export async function runRfidBridge() {
       shell: false,
     })
 
+    let timeout: ReturnType<typeof setTimeout> | null = null
+
+    const cleanup = () => {
+      if (timeout) clearTimeout(timeout)
+      process.kill()
+    }
+
     process.on('error', (error) => {
+      cleanup()
       resolve({
         success: false,
         message: error.message,
         error: error.message,
       })
     })
+
+    timeout = setTimeout(() => {
+      cleanup()
+      resolve({
+        success: false,
+        message: "No se pudo establecer conexion con el lector",
+      })
+    }, 61000)
 
     let output = ""
     let errorOutput = ""
@@ -46,6 +62,7 @@ export async function runRfidBridge() {
     })
 
     process.on("close", (code) => {
+      if (timeout) clearTimeout(timeout)
       console.log("[RFID close] code:", code)
       console.log("[RFID output completo]:", output)
 
