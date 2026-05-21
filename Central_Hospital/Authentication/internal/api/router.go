@@ -3,6 +3,7 @@ package api
 import (
 	"authentication_service/internal/api/handlers"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 )
 
@@ -24,6 +25,16 @@ func SetupRouter() *gin.Engine {
 			"service": "Authentication Service",
 		})
 	})
+
+	// CORS police
+	router.Use(cors.New(cors.Config{
+		// [TODO]
+		// Add local frontend url for dev
+		AllowOrigins:  []string{"http://api.hospital.cl", "http://localhost:*"},
+		AllowMethods:  []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
+		AllowHeaders:  []string{"*"},
+		ExposeHeaders: []string{"*"},
+	}))
 
 	return router
 }
