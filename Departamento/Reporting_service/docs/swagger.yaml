@@ -1,0 +1,159 @@
+basePath: /api
+definitions:
+  models.ActiveAlertReport:
+    properties:
+      created_at:
+        type: string
+      message:
+        type: string
+      supply_name:
+        type: string
+      type:
+        type: string
+    type: object
+  models.CriticalStockReport:
+    properties:
+      current_stock:
+        type: number
+      department:
+        type: string
+      internal_code:
+        type: string
+      minimum_stock:
+        type: number
+      supply_name:
+        type: string
+    type: object
+  models.MonthlyConsumptionReport:
+    properties:
+      internal_code:
+        type: string
+      supply_name:
+        type: string
+      total_consumed:
+        type: number
+    type: object
+  models.TraceabilityReport:
+    properties:
+      destino:
+        type: string
+      movement_date:
+        type: string
+      observations:
+        type: string
+      origen:
+        type: string
+      quantity:
+        type: number
+      responsable:
+        type: string
+      type:
+        type: string
+    type: object
+host: localhost:7030
+info:
+  contact: {}
+  description: Backend service for generating department inventory reports
+  title: Reporting Service API
+  version: "1.0"
+paths:
+  /reports/active-alerts:
+    get:
+      description: Returns all active alerts for the current department
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.ActiveAlertReport'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get active alerts report
+      tags:
+      - reports
+  /reports/critical-stock:
+    get:
+      description: Returns supplies with quantity <= minimum stock for the current
+        department
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.CriticalStockReport'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get critical stock report
+      tags:
+      - reports
+  /reports/monthly-consumption:
+    get:
+      description: Returns the total quantity of consumed supplies in the last 30
+        days for the current department
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.MonthlyConsumptionReport'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get monthly consumption report
+      tags:
+      - reports
+  /reports/traceability:
+    get:
+      description: Returns the movement history of a specific supply in the current
+        department
+      parameters:
+      - description: Supply Internal Code
+        in: query
+        name: supply_code
+        required: true
+        type: string
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.TraceabilityReport'
+            type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get traceability report for a supply
+      tags:
+      - reports
+swagger: "2.0"
