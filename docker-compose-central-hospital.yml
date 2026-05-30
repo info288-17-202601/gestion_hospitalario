@@ -64,6 +64,24 @@ services:
       rabbitmq:
         condition: service_started
     restart: unless-stopped
+  reporting_service:
+    image: reporting_service
+    build: ./Central_Hospital/Reporting_service
+    container_name: reporting_service
+    ports:
+      - "7020:7020"
+    environment:
+      - TZ=America/Santiago
+      - POSTGRES_SERVER=postgres
+      - POSTGRES_PORT=6000
+    env_file:
+      - ./Central_Hospital/Reporting_service/.env
+    networks:
+      - hospital_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
 
   nginx:
     image: nginx

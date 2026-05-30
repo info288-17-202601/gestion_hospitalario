@@ -80,4 +80,4 @@ Execute the compiled binary:
 ### 5. View Documentation
 
 Once the server is running, visit the interactive Swagger UI documentation at:
-[http://localhost:7030/docs/index.html](http://localhost:7030/docs/index.html)
+[http://localhost:7020/docs/index.html](http://localhost:7020/docs/index.html)

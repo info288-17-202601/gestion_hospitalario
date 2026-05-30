@@ -1,7 +1,9 @@
 package api
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 
 	"reporting_service/internal/config"
 	"reporting_service/internal/models"
@@ -37,15 +39,35 @@ func SetupRouter() *gin.Engine {
 	return r
 }
 
+func parseDepartmentID(c *gin.Context) (int, error) {
+	deptIDStr := c.Query("department_id")
+	if deptIDStr == "" {
+		return 0, fmt.Errorf("Falta el parametro department_id")
+	}
+	deptID, err := strconv.Atoi(deptIDStr)
+	if err != nil {
+		return 0, fmt.Errorf("El parametro department_id debe ser un entero valido")
+	}
+	return deptID, nil
+}
+
 // @Summary Get critical stock report
-// @Description Returns supplies with quantity <= minimum stock for the current department
+// @Description Returns supplies with quantity <= minimum stock for the specified department
 // @Tags reports
 // @Produce json
+// @Param department_id query int true "Department ID"
 // @Success 200 {array} models.CriticalStockReport
+// @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /reports/critical-stock [get]
 func getCriticalStock(c *gin.Context) {
-	reports, err := services.GetCriticalStockReport(appConfig.DepartmentID)
+	deptID, err := parseDepartmentID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	reports, err := services.GetCriticalStockReport(deptID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener stock critico", "details": err.Error()})
 		return
@@ -54,14 +76,22 @@ func getCriticalStock(c *gin.Context) {
 }
 
 // @Summary Get monthly consumption report
-// @Description Returns the total quantity of consumed supplies in the last 30 days for the current department
+// @Description Returns the total quantity of consumed supplies in the last 30 days for the specified department
 // @Tags reports
 // @Produce json
+// @Param department_id query int true "Department ID"
 // @Success 200 {array} models.MonthlyConsumptionReport
+// @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /reports/monthly-consumption [get]
 func getMonthlyConsumption(c *gin.Context) {
-	reports, err := services.GetMonthlyConsumptionReport(appConfig.DepartmentID)
+	deptID, err := parseDepartmentID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	reports, err := services.GetMonthlyConsumptionReport(deptID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener consumo mensual", "details": err.Error()})
 		return
@@ -70,22 +100,29 @@ func getMonthlyConsumption(c *gin.Context) {
 }
 
 // @Summary Get traceability report for a supply
-// @Description Returns the movement history of a specific supply in the current department
+// @Description Returns the movement history of a specific supply in the specified department
 // @Tags reports
 // @Produce json
+// @Param department_id query int true "Department ID"
 // @Param supply_code query string true "Supply Internal Code"
 // @Success 200 {array} models.TraceabilityReport
 // @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /reports/traceability [get]
 func getTraceability(c *gin.Context) {
+	deptID, err := parseDepartmentID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
 	supplyCode := c.Query("supply_code")
 	if supplyCode == "" {
 		c.JSON(http.StatusBadRequest, gin.H{"error": "Falta el parametro supply_code"})
 		return
 	}
 
-	reports, err := services.GetTraceabilityReport(appConfig.DepartmentID, supplyCode)
+	reports, err := services.GetTraceabilityReport(deptID, supplyCode)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener trazabilidad", "details": err.Error()})
 		return
@@ -94,14 +131,22 @@ func getTraceability(c *gin.Context) {
 }
 
 // @Summary Get active alerts report
-// @Description Returns all active alerts for the current department
+// @Description Returns all active alerts for the specified department
 // @Tags reports
 // @Produce json
+// @Param department_id query int true "Department ID"
 // @Success 200 {array} models.ActiveAlertReport
+// @Failure 400 {object} map[string]string
 // @Failure 500 {object} map[string]string
 // @Router /reports/active-alerts [get]
 func getActiveAlerts(c *gin.Context) {
-	reports, err := services.GetActiveAlertsReport(appConfig.DepartmentID)
+	deptID, err := parseDepartmentID(c)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	reports, err := services.GetActiveAlertsReport(deptID)
 	if err != nil {
 		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener alertas", "details": err.Error()})
 		return

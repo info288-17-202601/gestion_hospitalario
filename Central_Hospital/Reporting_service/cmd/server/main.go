@@ -13,7 +13,7 @@ import (
 // @title Reporting Service API
 // @version 1.0
 // @description Backend service for generating department inventory reports
-// @host localhost:7030
+// @host localhost:7020
 // @BasePath /api
 
 func main() {
@@ -30,7 +30,7 @@ func main() {
 	router := api.SetupRouter()
 
 	// Iniciar servidor
-	port := ":7030" // Usar 7030 para reporting (inventory es 7010, auth es 7050)
+	port := ":7020" // Usar 7020 para reporting (inventory es 7010, auth es 7050)
 	log.Printf("Starting Reporting Service on port %s", port)
 	if err := http.ListenAndServe(port, router); err != nil {
 		log.Fatalf("Failed to start server: %v", err)

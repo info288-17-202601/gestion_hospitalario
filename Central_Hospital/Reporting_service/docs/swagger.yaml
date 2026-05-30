@@ -50,7 +50,7 @@ definitions:
       type:
         type: string
     type: object
-host: localhost:7030
+host: localhost:7020
 info:
   contact: {}
   description: Backend service for generating department inventory reports
@@ -59,7 +59,13 @@ info:
 paths:
   /reports/active-alerts:
     get:
-      description: Returns all active alerts for the current department
+      description: Returns all active alerts for the specified department
+      parameters:
+      - description: Department ID
+        in: query
+        name: department_id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -69,6 +75,12 @@ paths:
             items:
               $ref: '#/definitions/models.ActiveAlertReport'
             type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "500":
           description: Internal Server Error
           schema:
@@ -80,8 +92,14 @@ paths:
       - reports
   /reports/critical-stock:
     get:
-      description: Returns supplies with quantity <= minimum stock for the current
+      description: Returns supplies with quantity <= minimum stock for the specified
         department
+      parameters:
+      - description: Department ID
+        in: query
+        name: department_id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -91,6 +109,12 @@ paths:
             items:
               $ref: '#/definitions/models.CriticalStockReport'
             type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "500":
           description: Internal Server Error
           schema:
@@ -103,7 +127,13 @@ paths:
   /reports/monthly-consumption:
     get:
       description: Returns the total quantity of consumed supplies in the last 30
-        days for the current department
+        days for the specified department
+      parameters:
+      - description: Department ID
+        in: query
+        name: department_id
+        required: true
+        type: integer
       produces:
       - application/json
       responses:
@@ -113,6 +143,12 @@ paths:
             items:
               $ref: '#/definitions/models.MonthlyConsumptionReport'
             type: array
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
         "500":
           description: Internal Server Error
           schema:
@@ -124,9 +160,14 @@ paths:
       - reports
   /reports/traceability:
     get:
-      description: Returns the movement history of a specific supply in the current
+      description: Returns the movement history of a specific supply in the specified
         department
       parameters:
+      - description: Department ID
+        in: query
+        name: department_id
+        required: true
+        type: integer
       - description: Supply Internal Code
         in: query
         name: supply_code

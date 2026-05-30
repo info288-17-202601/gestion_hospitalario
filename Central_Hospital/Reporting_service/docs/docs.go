@@ -17,7 +17,7 @@ const docTemplate = `{
     "paths": {
         "/reports/active-alerts": {
             "get": {
-                "description": "Returns all active alerts for the current department",
+                "description": "Returns all active alerts for the specified department",
                 "produces": [
                     "application/json"
                 ],
@@ -25,6 +25,15 @@ const docTemplate = `{
                     "reports"
                 ],
                 "summary": "Get active alerts report",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Department ID",
+                        "name": "department_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -32,6 +41,15 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/models.ActiveAlertReport"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     },
@@ -49,7 +67,7 @@ const docTemplate = `{
         },
         "/reports/critical-stock": {
             "get": {
-                "description": "Returns supplies with quantity \u003c= minimum stock for the current department",
+                "description": "Returns supplies with quantity \u003c= minimum stock for the specified department",
                 "produces": [
                     "application/json"
                 ],
@@ -57,6 +75,15 @@ const docTemplate = `{
                     "reports"
                 ],
                 "summary": "Get critical stock report",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Department ID",
+                        "name": "department_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -64,6 +91,15 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/models.CriticalStockReport"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     },
@@ -81,7 +117,7 @@ const docTemplate = `{
         },
         "/reports/monthly-consumption": {
             "get": {
-                "description": "Returns the total quantity of consumed supplies in the last 30 days for the current department",
+                "description": "Returns the total quantity of consumed supplies in the last 30 days for the specified department",
                 "produces": [
                     "application/json"
                 ],
@@ -89,6 +125,15 @@ const docTemplate = `{
                     "reports"
                 ],
                 "summary": "Get monthly consumption report",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Department ID",
+                        "name": "department_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -96,6 +141,15 @@ const docTemplate = `{
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/models.MonthlyConsumptionReport"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     },
@@ -113,7 +167,7 @@ const docTemplate = `{
         },
         "/reports/traceability": {
             "get": {
-                "description": "Returns the movement history of a specific supply in the current department",
+                "description": "Returns the movement history of a specific supply in the specified department",
                 "produces": [
                     "application/json"
                 ],
@@ -122,6 +176,13 @@ const docTemplate = `{
                 ],
                 "summary": "Get traceability report for a supply",
                 "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Department ID",
+                        "name": "department_id",
+                        "in": "query",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Supply Internal Code",
@@ -246,7 +307,7 @@ const docTemplate = `{
 // SwaggerInfo holds exported Swagger Info so clients can modify it
 var SwaggerInfo = &swag.Spec{
 	Version:          "1.0",
-	Host:             "localhost:7030",
+	Host:             "localhost:7020",
 	BasePath:         "/api",
 	Schemes:          []string{},
 	Title:            "Reporting Service API",

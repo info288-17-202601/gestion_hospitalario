@@ -6,12 +6,12 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:7030",
+    "host": "localhost:7020",
     "basePath": "/api",
     "paths": {
         "/reports/active-alerts": {
             "get": {
-                "description": "Returns all active alerts for the current department",
+                "description": "Returns all active alerts for the specified department",
                 "produces": [
                     "application/json"
                 ],
@@ -19,6 +19,15 @@
                     "reports"
                 ],
                 "summary": "Get active alerts report",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Department ID",
+                        "name": "department_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -26,6 +35,15 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/models.ActiveAlertReport"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     },
@@ -43,7 +61,7 @@
         },
         "/reports/critical-stock": {
             "get": {
-                "description": "Returns supplies with quantity \u003c= minimum stock for the current department",
+                "description": "Returns supplies with quantity \u003c= minimum stock for the specified department",
                 "produces": [
                     "application/json"
                 ],
@@ -51,6 +69,15 @@
                     "reports"
                 ],
                 "summary": "Get critical stock report",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Department ID",
+                        "name": "department_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -58,6 +85,15 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/models.CriticalStockReport"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     },
@@ -75,7 +111,7 @@
         },
         "/reports/monthly-consumption": {
             "get": {
-                "description": "Returns the total quantity of consumed supplies in the last 30 days for the current department",
+                "description": "Returns the total quantity of consumed supplies in the last 30 days for the specified department",
                 "produces": [
                     "application/json"
                 ],
@@ -83,6 +119,15 @@
                     "reports"
                 ],
                 "summary": "Get monthly consumption report",
+                "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Department ID",
+                        "name": "department_id",
+                        "in": "query",
+                        "required": true
+                    }
+                ],
                 "responses": {
                     "200": {
                         "description": "OK",
@@ -90,6 +135,15 @@
                             "type": "array",
                             "items": {
                                 "$ref": "#/definitions/models.MonthlyConsumptionReport"
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Bad Request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
                             }
                         }
                     },
@@ -107,7 +161,7 @@
         },
         "/reports/traceability": {
             "get": {
-                "description": "Returns the movement history of a specific supply in the current department",
+                "description": "Returns the movement history of a specific supply in the specified department",
                 "produces": [
                     "application/json"
                 ],
@@ -116,6 +170,13 @@
                 ],
                 "summary": "Get traceability report for a supply",
                 "parameters": [
+                    {
+                        "type": "integer",
+                        "description": "Department ID",
+                        "name": "department_id",
+                        "in": "query",
+                        "required": true
+                    },
                     {
                         "type": "string",
                         "description": "Supply Internal Code",
