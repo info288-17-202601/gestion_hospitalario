@@ -43,6 +43,28 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  alert_system:
+    image: alert_system
+    build: ./Central_Hospital/Alert_System
+    container_name: alert_system
+    ports:
+      - "7030:7030"
+    environment:
+      - TZ=America/Santiago
+      - POSTGRES_SERVER=postgres
+      - POSTGRES_PORT=6000
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+    env_file:
+      - ./Central_Hospital/Alert_System/.env
+    networks:
+      - hospital_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_started
+    restart: unless-stopped
+
   nginx:
     image: nginx
     ports:
@@ -65,6 +87,19 @@ services:
     restart: unless-stopped
     networks:
       - hospital_network
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      - TZ=America/Santiago
+    networks:
+      - hospital_network
+    depends_on:
+      - postgres
+    restart: unless-stopped
 
 networks:
   hospital_network:
