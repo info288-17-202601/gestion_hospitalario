@@ -1,0 +1,99 @@
+basePath: /api/v1
+definitions:
+  models.Alert:
+    properties:
+      created_at:
+        type: string
+      department_id:
+        type: integer
+      id:
+        type: integer
+      message:
+        type: string
+      status:
+        description: PENDING, REVIEWED, RESOLVED
+        type: string
+      supply_id:
+        type: integer
+      type:
+        type: string
+    type: object
+  schemas.UpdateAlertStatusRequest:
+    properties:
+      status:
+        description: PENDING, REVIEWED, RESOLVED
+        type: string
+    required:
+    - status
+    type: object
+host: localhost:7030
+info:
+  contact: {}
+  description: Microservice in Go for hospital real-time alerting, database persistence,
+    and WebSocket notifications.
+  title: Alert System Service API
+  version: "1.0"
+paths:
+  /alert:
+    get:
+      description: Retrieve a list of all historical system alerts, ordered by creation
+        date descending.
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Alert'
+            type: array
+        "500":
+          description: error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all historical alerts
+      tags:
+      - alerts
+  /alert/{id}/status:
+    put:
+      consumes:
+      - application/json
+      description: 'Modify the status field of a specific alert by ID (value must
+        be one of: PENDING, REVIEWED, RESOLVED).'
+      parameters:
+      - description: Alert ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: New status payload
+        in: body
+        name: status
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.UpdateAlertStatusRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Alert'
+        "400":
+          description: error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update alert status
+      tags:
+      - alerts
+swagger: "2.0"
