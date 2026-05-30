@@ -15,7 +15,6 @@ The following parameters must be specified in the `.env` file for the applicatio
 - `POSTGRES_SERVER`: The hostname or IP address of the PostgreSQL database. Use `localhost` if running outside of Docker, or the container name (e.g., `postgres` or the specific docker-compose service name) if running inside a Docker network.
 - `POSTGRES_PORT`: The port number on which the PostgreSQL database is listening (e.g., `5432`). Note that if running against docker locally you may map it differently, so adjust accordingly.
 - `POSTGRES_DB`: The name of the target database (e.g., `gestion_hospitalario`).
-- `DEPARTMENT_ID`: The fixed ID of the department this service instance belongs to (e.g., `1`). This is injected securely so users cannot modify stock of other departments.
 
 ### Example `.env` file
 
@@ -25,7 +24,6 @@ POSTGRES_PASSWORD=postgres
 POSTGRES_SERVER=localhost
 POSTGRES_PORT=5432
 POSTGRES_DB=gestion_hospitalario
-DEPARTMENT_ID=1
 ```
 
 ## Building and Running the Application
