@@ -45,7 +45,7 @@ definitions:
     - supply_id
     - user_id
     type: object
-host: localhost:8000
+host: localhost:7010
 info:
   contact: {}
   description: API for the Hospital's inventory management.

@@ -16,7 +16,7 @@ import (
 // @title Inventory Service API
 // @version 1.0
 // @description API for the Hospital's inventory management.
-// @host localhost:8000
+// @host localhost:7010
 // @BasePath /api/v1
 func main() {
 	cfg, err := config.LoadConfig()

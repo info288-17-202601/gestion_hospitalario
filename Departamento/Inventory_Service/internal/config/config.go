@@ -14,6 +14,8 @@ type Settings struct {
     PostgresPort     string
     PostgresDB       string
     DepartmentID     uint
+    RabbitMQURL      string
+    RabbitMQQueue    string
 }
 
 func (s *Settings) DatabaseURL() string {
@@ -32,6 +34,8 @@ func LoadConfig() (*Settings, error) {
         PostgresPort:     os.Getenv("POSTGRES_PORT"),
         PostgresDB:       os.Getenv("POSTGRES_DB"),
         DepartmentID:     parseUint(os.Getenv("DEPARTMENT_ID"), 1),
+        RabbitMQURL:      getEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/"),
+        RabbitMQQueue:    getEnv("RABBITMQ_QUEUE", "alert_queue"),
     }, nil
 }
 

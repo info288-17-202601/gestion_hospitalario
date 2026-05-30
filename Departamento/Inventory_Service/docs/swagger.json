@@ -6,7 +6,7 @@
         "contact": {},
         "version": "1.0"
     },
-    "host": "localhost:8000",
+    "host": "localhost:7010",
     "basePath": "/api/v1",
     "paths": {
         "/inventory/departments/stock": {
