@@ -15,7 +15,121 @@ const docTemplate = `{
     "host": "{{.Host}}",
     "basePath": "{{.BasePath}}",
     "paths": {
+        "/api/v1/inventory/movements": {
+            "post": {
+                "description": "Registers a general movement in the inventory",
+                "consumes": [
+                    "application/json"
+                ],
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inventory"
+                ],
+                "summary": "Register an inventory movement",
+                "parameters": [
+                    {
+                        "description": "Movement data",
+                        "name": "request",
+                        "in": "body",
+                        "required": true,
+                        "schema": {
+                            "$ref": "#/definitions/schemas.MovementRequest"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Movement successfully registered",
+                        "schema": {
+                            "$ref": "#/definitions/schemas.OperationResponse"
+                        }
+                    },
+                    "400": {
+                        "description": "Bad request",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    },
+                    "422": {
+                        "description": "Validation error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/inventory/categories": {
+            "get": {
+                "description": "Returns all supply categories",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inventory"
+                ],
+                "summary": "Get supply categories",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.SupplyCategory"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            }
+        },
         "/inventory/departments/stock": {
+            "get": {
+                "description": "Returns the stock of the configured department",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inventory"
+                ],
+                "summary": "Get department stock",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.DepartmentInventory"
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Internal Server Error",
+                        "schema": {
+                            "type": "object",
+                            "additionalProperties": {
+                                "type": "string"
+                            }
+                        }
+                    }
+                }
+            },
             "post": {
                 "description": "Modifies the stock of a supply for a specific department (increase or decrease)",
                 "consumes": [
@@ -76,48 +190,60 @@ const docTemplate = `{
                 }
             }
         },
-        "/inventory/movement": {
-            "post": {
-                "description": "Registers a general movement in the inventory",
-                "consumes": [
-                    "application/json"
-                ],
+        "/inventory/movements": {
+            "get": {
+                "description": "Returns all inventory movements for the configured department",
                 "produces": [
                     "application/json"
                 ],
                 "tags": [
                     "inventory"
                 ],
-                "summary": "Register an inventory movement",
-                "parameters": [
-                    {
-                        "description": "Movement data",
-                        "name": "request",
-                        "in": "body",
-                        "required": true,
-                        "schema": {
-                            "$ref": "#/definitions/schemas.MovementRequest"
-                        }
-                    }
-                ],
+                "summary": "Get inventory movements",
                 "responses": {
                     "200": {
-                        "description": "Movement successfully registered",
+                        "description": "OK",
                         "schema": {
-                            "$ref": "#/definitions/schemas.OperationResponse"
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.InventoryMovement"
+                            }
                         }
                     },
-                    "400": {
-                        "description": "Bad request",
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
                                 "type": "string"
                             }
                         }
+                    }
+                }
+            }
+        },
+        "/inventory/supplies": {
+            "get": {
+                "description": "Returns all supplies",
+                "produces": [
+                    "application/json"
+                ],
+                "tags": [
+                    "inventory"
+                ],
+                "summary": "Get supplies",
+                "responses": {
+                    "200": {
+                        "description": "OK",
+                        "schema": {
+                            "type": "array",
+                            "items": {
+                                "$ref": "#/definitions/models.Supply"
+                            }
+                        }
                     },
-                    "422": {
-                        "description": "Validation error",
+                    "500": {
+                        "description": "Internal Server Error",
                         "schema": {
                             "type": "object",
                             "additionalProperties": {
@@ -130,6 +256,161 @@ const docTemplate = `{
         }
     },
     "definitions": {
+        "models.Department": {
+            "type": "object",
+            "properties": {
+                "id": {
+                    "type": "integer"
+                },
+                "inventory": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.DepartmentInventory"
+                    }
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "location": {
+                    "type": "string"
+                },
+                "name": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.DepartmentInventory": {
+            "type": "object",
+            "properties": {
+                "department": {
+                    "$ref": "#/definitions/models.Department"
+                },
+                "departmentID": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "supply": {
+                    "$ref": "#/definitions/models.Supply"
+                },
+                "supplyID": {
+                    "type": "integer"
+                },
+                "updatedAt": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.InventoryMovement": {
+            "type": "object",
+            "properties": {
+                "destinationDepartment": {
+                    "$ref": "#/definitions/models.Department"
+                },
+                "destinationDepartmentID": {
+                    "type": "integer"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "movementDate": {
+                    "type": "string"
+                },
+                "observations": {
+                    "type": "string"
+                },
+                "originDepartment": {
+                    "$ref": "#/definitions/models.Department"
+                },
+                "originDepartmentID": {
+                    "type": "integer"
+                },
+                "quantity": {
+                    "type": "number"
+                },
+                "supply": {
+                    "$ref": "#/definitions/models.Supply"
+                },
+                "supplyID": {
+                    "type": "integer"
+                },
+                "type": {
+                    "description": "e.g. \"entrada\", \"salida\", \"transferencia\"",
+                    "type": "string"
+                },
+                "userID": {
+                    "type": "integer"
+                }
+            }
+        },
+        "models.Supply": {
+            "type": "object",
+            "properties": {
+                "category": {
+                    "$ref": "#/definitions/models.SupplyCategory"
+                },
+                "categoryID": {
+                    "type": "integer"
+                },
+                "departmentInventory": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.DepartmentInventory"
+                    }
+                },
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "internalCode": {
+                    "type": "string"
+                },
+                "isActive": {
+                    "type": "boolean"
+                },
+                "minimumStock": {
+                    "type": "number"
+                },
+                "movements": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.InventoryMovement"
+                    }
+                },
+                "name": {
+                    "type": "string"
+                },
+                "unitOfMeasure": {
+                    "type": "string"
+                }
+            }
+        },
+        "models.SupplyCategory": {
+            "type": "object",
+            "properties": {
+                "description": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "integer"
+                },
+                "name": {
+                    "type": "string"
+                },
+                "supplies": {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/definitions/models.Supply"
+                    }
+                }
+            }
+        },
         "schemas.MovementRequest": {
             "type": "object",
             "required": [

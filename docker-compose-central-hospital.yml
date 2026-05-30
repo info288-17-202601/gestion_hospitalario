@@ -40,6 +40,29 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
+  inventory:
+    image: inventory_service
+    build: ./Departamento/Inventory_Service
+    container_name: inventory_service
+    ports:
+      - "7010:7010"
+    environment:
+      - TZ=America/Santiago
+      - POSTGRES_SERVER=postgres
+      - POSTGRES_PORT=6000
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_SERVER=postgres
+      - POSTGRES_DB=gestion_hospitalario
+      - DEPARTMENT_ID=1
+      - SERVER_PORT=7010
+    networks:
+      - hospital_network
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: unless-stopped
+
   alert_system:
     image: alert_system
     build: ./Central_Hospital/Alert_System
@@ -123,3 +146,4 @@ networks:
 
 volumes:
   postgres_data:
+

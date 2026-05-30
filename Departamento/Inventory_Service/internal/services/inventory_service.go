@@ -268,3 +268,65 @@ func (s *InventoryService) publishAlert(supply models.Supply, department models.
 
 	log.Printf("[Alert] Stock warning published successfully for supply %s", supply.Name)
 }
+// GetCategories returns all supply categories.
+func (s *InventoryService) GetCategories() ([]models.SupplyCategory, error) {
+	var categories []models.SupplyCategory
+
+	if err := s.db.Find(&categories).Error; err != nil {
+		return nil, err
+	}
+
+	return categories, nil
+}
+
+// GetSupplies returns all supplies.
+func (s *InventoryService) GetSupplies() ([]models.Supply, error) {
+	var supplies []models.Supply
+
+	if err := s.db.Find(&supplies).Error; err != nil {
+		return nil, err
+	}
+
+	return supplies, nil
+}
+
+// GetDepartmentStock returns the stock of the department configured in DEPARTMENT_ID.
+func (s *InventoryService) GetDepartmentStock() ([]models.DepartmentInventory, error) {
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	departmentID := cfg.DepartmentID
+
+	var inventory []models.DepartmentInventory
+
+	if err := s.db.
+		Where("department_id = ?", departmentID).
+		Find(&inventory).Error; err != nil {
+		return nil, err
+	}
+
+	return inventory, nil
+}
+
+// GetMovements returns all movements related to the configured department.
+func (s *InventoryService) GetMovements() ([]models.InventoryMovement, error) {
+	cfg, err := config.LoadConfig()
+	if err != nil {
+		return nil, err
+	}
+
+	departmentID := cfg.DepartmentID
+
+	var movements []models.InventoryMovement
+
+	if err := s.db.
+		Where("origin_department_id = ? OR destination_department_id = ?", departmentID, departmentID).
+		Order("movement_date DESC").
+		Find(&movements).Error; err != nil {
+		return nil, err
+	}
+
+	return movements, nil
+}

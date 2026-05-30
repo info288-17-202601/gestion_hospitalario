@@ -1,5 +1,107 @@
 basePath: /api/v1
 definitions:
+  models.Department:
+    properties:
+      id:
+        type: integer
+      inventory:
+        items:
+          $ref: '#/definitions/models.DepartmentInventory'
+        type: array
+      isActive:
+        type: boolean
+      location:
+        type: string
+      name:
+        type: string
+    type: object
+  models.DepartmentInventory:
+    properties:
+      department:
+        $ref: '#/definitions/models.Department'
+      departmentID:
+        type: integer
+      id:
+        type: integer
+      quantity:
+        type: number
+      supply:
+        $ref: '#/definitions/models.Supply'
+      supplyID:
+        type: integer
+      updatedAt:
+        type: string
+    type: object
+  models.InventoryMovement:
+    properties:
+      destinationDepartment:
+        $ref: '#/definitions/models.Department'
+      destinationDepartmentID:
+        type: integer
+      id:
+        type: integer
+      movementDate:
+        type: string
+      observations:
+        type: string
+      originDepartment:
+        $ref: '#/definitions/models.Department'
+      originDepartmentID:
+        type: integer
+      quantity:
+        type: number
+      supply:
+        $ref: '#/definitions/models.Supply'
+      supplyID:
+        type: integer
+      type:
+        description: e.g. "entrada", "salida", "transferencia"
+        type: string
+      userID:
+        type: integer
+    type: object
+  models.Supply:
+    properties:
+      category:
+        $ref: '#/definitions/models.SupplyCategory'
+      categoryID:
+        type: integer
+      departmentInventory:
+        items:
+          $ref: '#/definitions/models.DepartmentInventory'
+        type: array
+      description:
+        type: string
+      id:
+        type: integer
+      internalCode:
+        type: string
+      isActive:
+        type: boolean
+      minimumStock:
+        type: number
+      movements:
+        items:
+          $ref: '#/definitions/models.InventoryMovement'
+        type: array
+      name:
+        type: string
+      unitOfMeasure:
+        type: string
+    type: object
+  models.SupplyCategory:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+      supplies:
+        items:
+          $ref: '#/definitions/models.Supply'
+        type: array
+    type: object
   schemas.MovementRequest:
     properties:
       destination_department_id:
@@ -52,7 +154,82 @@ info:
   title: Inventory Service API
   version: "1.0"
 paths:
+  /api/v1/inventory/movements:
+    post:
+      consumes:
+      - application/json
+      description: Registers a general movement in the inventory
+      parameters:
+      - description: Movement data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.MovementRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: Movement successfully registered
+          schema:
+            $ref: '#/definitions/schemas.OperationResponse'
+        "400":
+          description: Bad request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Validation error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Register an inventory movement
+      tags:
+      - inventory
+  /inventory/categories:
+    get:
+      description: Returns all supply categories
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.SupplyCategory'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get supply categories
+      tags:
+      - inventory
   /inventory/departments/stock:
+    get:
+      description: Returns the stock of the configured department
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.DepartmentInventory'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get department stock
+      tags:
+      - inventory
     post:
       consumes:
       - application/json
@@ -93,38 +270,46 @@ paths:
       summary: Modify department stock
       tags:
       - inventory
-  /inventory/movement:
-    post:
-      consumes:
-      - application/json
-      description: Registers a general movement in the inventory
-      parameters:
-      - description: Movement data
-        in: body
-        name: request
-        required: true
-        schema:
-          $ref: '#/definitions/schemas.MovementRequest'
+  /inventory/movements:
+    get:
+      description: Returns all inventory movements for the configured department
       produces:
       - application/json
       responses:
         "200":
-          description: Movement successfully registered
+          description: OK
           schema:
-            $ref: '#/definitions/schemas.OperationResponse'
-        "400":
-          description: Bad request
-          schema:
-            additionalProperties:
-              type: string
-            type: object
-        "422":
-          description: Validation error
+            items:
+              $ref: '#/definitions/models.InventoryMovement'
+            type: array
+        "500":
+          description: Internal Server Error
           schema:
             additionalProperties:
               type: string
             type: object
-      summary: Register an inventory movement
+      summary: Get inventory movements
+      tags:
+      - inventory
+  /inventory/supplies:
+    get:
+      description: Returns all supplies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Supply'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get supplies
       tags:
       - inventory
 swagger: "2.0"
