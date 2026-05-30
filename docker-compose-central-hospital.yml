@@ -54,6 +54,18 @@ services:
     networks:
       - hospital_network
 
+  frontend_central:
+    image: frontend_central
+    build: ./frontend-central
+    container_name: frontend_central
+    ports:
+      - "3001:3001"
+    environment:
+      - TZ=America/Santiago
+    restart: unless-stopped
+    networks:
+      - hospital_network
+
 networks:
   hospital_network:
     driver: bridge

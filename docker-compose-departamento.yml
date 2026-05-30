@@ -28,6 +28,18 @@ services:
     networks:
       - hospital_network
 
+  frontend_nodo:
+    image: frontend_nodo
+    build: ./frontend-nodo
+    container_name: frontend_nodo
+    ports:
+      - "3002:3002"
+    environment:
+      - TZ=America/Santiago
+    restart: unless-stopped
+    networks:
+      - hospital_network
+
 networks:
   hospital_network:
     driver: bridge
