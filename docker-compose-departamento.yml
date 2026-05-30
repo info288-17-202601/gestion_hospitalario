@@ -14,20 +14,6 @@ services:
     networks:
       - hospital_network
 
-  reporting_service:
-    image: reporting_service
-    build: ./Departamento/Reporting_service
-    container_name: reporting_service
-    ports:
-      - "7030:7030"
-    environment:
-      - TZ=America/Santiago
-    env_file:
-      - ./Departamento/Reporting_service/.env
-    restart: unless-stopped
-    networks:
-      - hospital_network
-
   frontend_nodo:
     image: frontend_nodo
     build: ./frontend-nodo

@@ -1,10 +1,10 @@
-# Inventory Service
+# Reporting Service
 
-This is the backend service for managing the department inventory within the Hospital Management System (S.G.H).
+This is the backend service for generating reports related to the department inventory within the Hospital Management System (S.G.H).
 
 ## Configuration
 
-To run this project, you need to set up a `.env` file in the root of the `Inventory_Service` directory. This file will hold the environment variables necessary for connecting to the database and setting other project-level configurations.
+To run this project, you need to set up a `.env` file in the root of the `Reporting_Service` directory. This file will hold the environment variables necessary for connecting to the database and setting other project-level configurations.
 
 ### Environment Variables (.env)
 
@@ -66,7 +66,7 @@ This will create/update the `docs/` folder containing the `swagger.json` and `sw
 Build the Go binary to ensure optimal performance:
 
 ```bash
-go build -o Reporting_service_bin ./cmd/main.go
+go build -o reporting_service_bin ./cmd/server/main.go
 ```
 
 ### 4. Run the Service
@@ -74,7 +74,7 @@ go build -o Reporting_service_bin ./cmd/main.go
 Execute the compiled binary:
 
 ```bash
-./Reporting_service_bin
+./reporting_service_bin
 ```
 
 ### 5. View Documentation
