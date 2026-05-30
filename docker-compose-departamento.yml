@@ -9,7 +9,7 @@ services:
     environment:
       - TZ=America/Santiago
     env_file:
-      - ./Departamento/Inventory_Service/.env
+      - ./Departamento/.env
     restart: unless-stopped
     networks:
       - hospital_network

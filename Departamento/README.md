@@ -3,13 +3,13 @@
 This directory contains the services and configurations deployed at the hospital department nodes:
 - **Inventory Service (`Inventory_Service`)**: A Go backend service that manages local stock levels, registers inventory movements, validates minimum stock limits, and publishes alerts to RabbitMQ when stocks fall below the safety threshold.
 
-To simplify deployment and integration with the central hospital infrastructure, this document outlines all the environment configurations needed for the department.
+To simplify deployment and integration with the central hospital infrastructure, **a single unified `.env` file is used at the root of `Departamento/`** (`Departamento/.env`) which is loaded by the services in `docker-compose-departamento.yml`.
 
 ---
 
 ## Environment Variables (`.env`)
 
-The department services rely on a `.env` configuration file to establish database connections and network communication with the central message broker.
+Below is the explanation of all environment variables defined in the department `.env` file (`Departamento/.env`).
 
 ### 1. Database Configuration (PostgreSQL Connection)
 Although the PostgreSQL database resides centrally, the department backend needs full connection parameters to read/write department-specific stock:
@@ -20,7 +20,7 @@ Although the PostgreSQL database resides centrally, the department backend needs
 * **`POSTGRES_PORT`**: Port number of the database service (e.g., `6000`).
 
 ### 2. Department Identity
-* **`DEPARTMENT_ID`**: The unique integer identifier representing this specific hospital department node (e.g., `1`). This restricts inventory actions and reporting to the assigned department.
+* **`DEPARTMENT_ID`**: The unique integer identifier representing this specific hospital department node (e.g., `1`). This restricts inventory actions to the assigned department.
 
 ### 3. Messaging Settings (RabbitMQ)
 Used by the Inventory Service to publish alerts to the queue whenever stock drops below the required minimum level:
@@ -29,12 +29,12 @@ Used by the Inventory Service to publish alerts to the queue whenever stock drop
 
 ---
 
-## Unified `.env` Example
+## Unified `.env` Template
 
-Create a `.env` file inside `/Departamento/Inventory_Service/.env` using the template below:
+Create a file named `.env` in this directory (`Departamento/.env`) with the following variables:
 
 ```env
-# Database connection settings
+# Database Settings
 POSTGRES_DB=gestion_hospitalario
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
@@ -44,7 +44,7 @@ POSTGRES_PORT=6000
 # Department node identifier
 DEPARTMENT_ID=1
 
-# RabbitMQ configuration for alerts publishing
+# RabbitMQ Settings
 RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
 RABBITMQ_QUEUE=alert_queue
 ```

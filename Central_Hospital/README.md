@@ -6,20 +6,20 @@ This directory contains the core services and database settings for the central 
 - **Alert System (`Alert_System`)**: RabbitMQ consumer and WebSocket hub for sending low-stock and movement alerts.
 - **Reporting Service (`Reporting_service`)**: Compiles operational reports regarding stock, active alerts, and traceability.
 
-To streamline development and container deployment, this document unifies the environment configuration across all Central Hospital components.
+To streamline development and container deployment, **a single unified `.env` file is used at the root of `Central_Hospital/`** (`Central_Hospital/.env`) which is loaded by all services in `docker-compose-central-hospital.yml`.
 
 ---
 
 ## Unified Environment Variables (`.env`)
 
-Each service has a `.env` configuration file to define its operational settings. Below is the explanation of all environment variables used by the Central Hospital components.
+Below is the explanation of all environment variables defined in the central `.env` file (`Central_Hospital/.env`).
 
 ### 1. Database Configuration (PostgreSQL)
 These variables configure the PostgreSQL connection and are shared by all backend services and the DB container:
 * **`POSTGRES_DB`**: Name of the target database (e.g., `gestion_hospitalario`).
 * **`POSTGRES_USER`**: PostgreSQL username (e.g., `postgres`).
 * **`POSTGRES_PASSWORD`**: Password associated with the database user.
-* **`POSTGRES_SERVER`**: The hostname or IP address of the database. Use `postgres` (or `localhost`) inside the Docker Compose network, or `database.hospital.cl` in other environments.
+* **`POSTGRES_SERVER`**: The hostname or IP address of the database. Inside the Docker Compose network, this points to `postgres`. If running a service directly on the host, use `localhost`.
 * **`POSTGRES_PORT`**: Port number where PostgreSQL is running (e.g., `6000`).
 
 ### 2. Authentication Settings
@@ -36,52 +36,24 @@ Used by the Alert System to connect to the RabbitMQ message broker:
 
 ---
 
-## Unified `.env` Examples
+## Unified `.env` Template
 
-Below are reference `.env` templates for the Central Hospital components depending on your setup.
+Create a file named `.env` in this directory (`Central_Hospital/.env`) with the following variables:
 
-### A. Database Container & Connection Defaults
-Copy this template to `/Central_Hospital/Data_Base/.env` and adjust the credentials:
 ```env
-POSTGRES_DB=gestion_hospitalario
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-```
-
-### B. Authentication Service
-Copy this template to `/Central_Hospital/Authentication/.env`:
-```env
+# Database Settings
 POSTGRES_DB=gestion_hospitalario
 POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 POSTGRES_SERVER=postgres
 POSTGRES_PORT=6000
 
+# Authentication Settings
 JWT_SECRET=super_secret_hospital_key
-```
 
-### C. Alert System
-Copy this template to `/Central_Hospital/Alert_System/.env`:
-```env
+# Alert System Settings
 PROJECT_NAME="Central Hospital - Alert Service"
 PORT=7030
-
-POSTGRES_DB=gestion_hospitalario
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_SERVER=postgres
-POSTGRES_PORT=6000
-
 RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
 RABBITMQ_QUEUE=alert_queue
-```
-
-### D. Reporting Service
-Copy this template to `/Central_Hospital/Reporting_service/.env`:
-```env
-POSTGRES_DB=gestion_hospitalario
-POSTGRES_USER=postgres
-POSTGRES_PASSWORD=postgres
-POSTGRES_SERVER=postgres
-POSTGRES_PORT=6000
 ```

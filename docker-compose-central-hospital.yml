@@ -7,7 +7,7 @@ services:
       - "6000:6000"
     restart: unless-stopped
     env_file:
-      - ./Central_Hospital/Data_Base/.env
+      - ./Central_Hospital/.env
     environment:
       PGDATA: /var/lib/postgresql/data/pgdata
       TZ: America/Santiago
@@ -32,7 +32,7 @@ services:
     environment:
       - TZ=America/Santiago
     env_file:
-      - ./Central_Hospital/Authentication/.env
+      - ./Central_Hospital/.env
     networks:
       - hospital_network
     depends_on:
@@ -52,7 +52,7 @@ services:
       - POSTGRES_PORT=6000
       - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
     env_file:
-      - ./Central_Hospital/Alert_System/.env
+      - ./Central_Hospital/.env
     networks:
       - hospital_network
     depends_on:
@@ -72,7 +72,7 @@ services:
       - POSTGRES_SERVER=postgres
       - POSTGRES_PORT=6000
     env_file:
-      - ./Central_Hospital/Reporting_service/.env
+      - ./Central_Hospital/.env
     networks:
       - hospital_network
     depends_on:
