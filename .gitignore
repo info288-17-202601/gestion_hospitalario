@@ -16,3 +16,11 @@ postgres_data/
 # Frontend
 frontend/node_modules
 frontend/.next
+
+# Frontend central
+frontend-central/node_modules
+frontend-central/.next
+
+# Frontend nodo
+frontend-nodo/node_modules
+frontend-nodo/.next
