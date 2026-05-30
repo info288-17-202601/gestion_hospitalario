@@ -19,7 +19,7 @@ services:
     build: ./frontend-nodo
     container_name: frontend_nodo
     ports:
-      - "3002:3002"
+      - "8010:8010"
     environment:
       - TZ=America/Santiago
     restart: unless-stopped

@@ -96,7 +96,7 @@ services:
     build: ./frontend-central
     container_name: frontend_central
     ports:
-      - "3001:3001"
+      - "8020:8020"
     environment:
       - TZ=America/Santiago
     restart: unless-stopped
