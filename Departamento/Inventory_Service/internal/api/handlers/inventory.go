@@ -2,6 +2,7 @@ package handlers
 
 import (
 	"net/http"
+	"strconv"
 
 	"inventory_service/internal/db"
 	"inventory_service/internal/schemas"
@@ -175,4 +176,77 @@ func RegisterMovement(c *gin.Context) {
 		Status:     "success",
 		MovementID: &movement.ID,
 	})
+}
+// @Summary Create supply
+// @Description Creates a new supply
+// @Tags inventory
+// @Accept json
+// @Produce json
+// @Param request body schemas.CreateSupplyRequest true "Supply data"
+// @Success 201 {object} models.Supply
+// @Failure 400 {object} map[string]string
+// @Failure 422 {object} map[string]string
+// @Router /inventory/supplies [post]
+func CreateSupply(c *gin.Context) {
+	var req schemas.CreateSupplyRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"detail": err.Error()})
+		return
+	}
+
+	service := services.NewInventoryService(db.GetDB())
+
+	supply, err := service.CreateSupply(req)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"detail": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusCreated, supply)
+}
+
+// @Summary Update supply
+// @Description Updates an existing supply
+// @Tags inventory
+// @Accept json
+// @Produce json
+// @Param id path int true "Supply ID"
+// @Param request body schemas.UpdateSupplyRequest true "Supply data"
+// @Success 200 {object} models.Supply
+// @Failure 400 {object} map[string]string
+// @Failure 404 {object} map[string]string
+// @Failure 422 {object} map[string]string
+// @Router /inventory/supplies/{id} [put]
+func UpdateSupply(c *gin.Context) {
+	idParam := c.Param("id")
+
+	id, err := strconv.ParseUint(idParam, 10, 64)
+	if err != nil {
+		c.JSON(http.StatusBadRequest, gin.H{"detail": "Invalid supply ID"})
+		return
+	}
+
+	var req schemas.UpdateSupplyRequest
+
+	if err := c.ShouldBindJSON(&req); err != nil {
+		c.JSON(http.StatusUnprocessableEntity, gin.H{"detail": err.Error()})
+		return
+	}
+
+	service := services.NewInventoryService(db.GetDB())
+
+	supply, err := service.UpdateSupply(uint(id), req)
+	if err != nil {
+		status := http.StatusBadRequest
+
+		if err.Error() == "Supply not found" {
+			status = http.StatusNotFound
+		}
+
+		c.JSON(status, gin.H{"detail": err.Error()})
+		return
+	}
+
+	c.JSON(http.StatusOK, supply)
 }

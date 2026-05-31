@@ -5,7 +5,6 @@ import (
 	"inventory_service/internal/config"
 	"inventory_service/internal/db"
 	"log"
-	"os"
 
 	_ "inventory_service/docs"
 
@@ -30,9 +29,7 @@ func main() {
 
 	router := api.SetupRouter()
 
-	if os.Getenv("GIN_MODE") != "release" {
-		router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
-	}
+	router.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	log.Printf("Starting %s on :7010", cfg.ProjectName)
 	if err := router.Run(":7010"); err != nil {

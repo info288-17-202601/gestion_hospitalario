@@ -39,3 +39,22 @@ type OperationResponse struct {
     Status     string `json:"status"`
     MovementID *uint  `json:"movement_id,omitempty"`
 }
+type CreateSupplyRequest struct {
+	InternalCode  string  `json:"internal_code" binding:"required"`
+	Name          string  `json:"name" binding:"required"`
+	Description   string  `json:"description"`
+	UnitOfMeasure string  `json:"unit_of_measure"`
+	MinimumStock  float64 `json:"minimum_stock" binding:"required"`
+	CategoryID    uint    `json:"category_id"`
+	IsActive       bool    `json:"is_active"`
+}
+
+type UpdateSupplyRequest struct {
+	InternalCode  string  `json:"internal_code"`
+	Name          string  `json:"name"`
+	Description   string  `json:"description"`
+	UnitOfMeasure string  `json:"unit_of_measure"`
+	MinimumStock  float64 `json:"minimum_stock"`
+	CategoryID    uint    `json:"category_id"`
+	IsActive       *bool   `json:"is_active"`
+}

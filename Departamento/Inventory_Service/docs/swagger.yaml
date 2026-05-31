@@ -102,6 +102,27 @@ definitions:
           $ref: '#/definitions/models.Supply'
         type: array
     type: object
+  schemas.CreateSupplyRequest:
+    properties:
+      category_id:
+        type: integer
+      description:
+        type: string
+      internal_code:
+        type: string
+      is_active:
+        type: boolean
+      minimum_stock:
+        type: number
+      name:
+        type: string
+      unit_of_measure:
+        type: string
+    required:
+    - internal_code
+    - minimum_stock
+    - name
+    type: object
   schemas.MovementRequest:
     properties:
       destination_department_id:
@@ -146,6 +167,23 @@ definitions:
     - quantity_change
     - supply_id
     - user_id
+    type: object
+  schemas.UpdateSupplyRequest:
+    properties:
+      category_id:
+        type: integer
+      description:
+        type: string
+      internal_code:
+        type: string
+      is_active:
+        type: boolean
+      minimum_stock:
+        type: number
+      name:
+        type: string
+      unit_of_measure:
+        type: string
     type: object
 host: localhost:7010
 info:
@@ -310,6 +348,84 @@ paths:
               type: string
             type: object
       summary: Get supplies
+      tags:
+      - inventory
+    post:
+      consumes:
+      - application/json
+      description: Creates a new supply
+      parameters:
+      - description: Supply data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.CreateSupplyRequest'
+      produces:
+      - application/json
+      responses:
+        "201":
+          description: Created
+          schema:
+            $ref: '#/definitions/models.Supply'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create supply
+      tags:
+      - inventory
+  /inventory/supplies/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Updates an existing supply
+      parameters:
+      - description: Supply ID
+        in: path
+        name: id
+        required: true
+        type: integer
+      - description: Supply data
+        in: body
+        name: request
+        required: true
+        schema:
+          $ref: '#/definitions/schemas.UpdateSupplyRequest'
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Supply'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "404":
+          description: Not Found
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "422":
+          description: Unprocessable Entity
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update supply
       tags:
       - inventory
 swagger: "2.0"

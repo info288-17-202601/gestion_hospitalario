@@ -330,3 +330,63 @@ func (s *InventoryService) GetMovements() ([]models.InventoryMovement, error) {
 
 	return movements, nil
 }
+
+func (s *InventoryService) CreateSupply(req schemas.CreateSupplyRequest) (*models.Supply, error) {
+	supply := models.Supply{
+		InternalCode:  req.InternalCode,
+		Name:          req.Name,
+		Description:   req.Description,
+		UnitOfMeasure: req.UnitOfMeasure,
+		MinimumStock:  req.MinimumStock,
+		CategoryID:    req.CategoryID,
+		IsActive:      req.IsActive,
+	}
+
+	if err := s.db.Create(&supply).Error; err != nil {
+		return nil, err
+	}
+
+	return &supply, nil
+}
+
+func (s *InventoryService) UpdateSupply(id uint, req schemas.UpdateSupplyRequest) (*models.Supply, error) {
+	var supply models.Supply
+
+	if err := s.db.First(&supply, id).Error; err != nil {
+		return nil, errors.New("Supply not found")
+	}
+
+	if req.InternalCode != "" {
+		supply.InternalCode = req.InternalCode
+	}
+
+	if req.Name != "" {
+		supply.Name = req.Name
+	}
+
+	if req.Description != "" {
+		supply.Description = req.Description
+	}
+
+	if req.UnitOfMeasure != "" {
+		supply.UnitOfMeasure = req.UnitOfMeasure
+	}
+
+	if req.MinimumStock != 0 {
+		supply.MinimumStock = req.MinimumStock
+	}
+
+	if req.CategoryID != 0 {
+		supply.CategoryID = req.CategoryID
+	}
+
+	if req.IsActive != nil {
+		supply.IsActive = *req.IsActive
+	}
+
+	if err := s.db.Save(&supply).Error; err != nil {
+		return nil, err
+	}
+
+	return &supply, nil
+}

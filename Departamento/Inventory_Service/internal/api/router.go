@@ -17,6 +17,8 @@ func SetupRouter() *gin.Engine {
 
 			// Insumos
 			inventory.GET("/supplies", handlers.GetSupplies)
+			inventory.POST("/supplies", handlers.CreateSupply)
+			inventory.PUT("/supplies/:id", handlers.UpdateSupply)
 
 			// Stock por departamento
 			inventory.GET("/departments/stock", handlers.GetDepartmentStock)
