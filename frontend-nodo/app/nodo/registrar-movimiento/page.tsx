@@ -30,13 +30,20 @@ export default function NodeRegistrarMovimientoPage() {
       .then(([inventoryData, suppliesData]) => {
         setInventory(inventoryData)
         setSupplies(suppliesData)
+        
+        if (inventoryData.length > 0) {
+          const actualDeptId = inventoryData[0].department_id
+          setDeptId(actualDeptId)
+          const found = departments.find(d => d.id === actualDeptId)
+          if (found) setDept(found)
+        }
       })
       .catch((error) => {
         console.error('Error cargando datos de movimiento:', error)
       })
   }, [])
 
-  const localInventory = inventory.filter(inv => inv.department_id === deptId)
+  const localInventory = inventory
   const availableSupplies = supplies.filter((s) => {
     if (!s.is_active) return false
     return type === 'entrada'

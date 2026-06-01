@@ -8,7 +8,7 @@ export default function HomePage() {
 
   useEffect(() => {
     sessionStorage.setItem('sghd_environment', 'nodo')
-    sessionStorage.setItem('sghd_nodo_department', '1')
+    
     router.replace('/login')
   }, [router])
 

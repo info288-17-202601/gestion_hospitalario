@@ -26,13 +26,20 @@ export default function NodeInventarioPage() {
         setInventory(inventoryData)
         setSupplies(suppliesData)
         setCategories(categoriesData)
+        
+        if (inventoryData.length > 0) {
+          const actualDeptId = inventoryData[0].department_id
+          setDeptId(actualDeptId)
+          const found = departments.find(d => d.id === actualDeptId)
+          if (found) setDept(found)
+        }
       })
       .catch((error) => {
         console.error('Error cargando inventario:', error)
       })
   }, [])
 
-  const localInventory = inventory.filter(inv => inv.department_id === deptId)
+  const localInventory = inventory
 
   const filteredInventory = localInventory.filter((inv) => {
     const supply = supplies.find(s => s.id === inv.supply_id)
