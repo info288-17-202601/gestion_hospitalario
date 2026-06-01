@@ -3,26 +3,21 @@
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import {
-  LayoutDashboard,
   Package,
   PlusCircle,
   ArrowLeftRight,
   Bell,
   Building2,
-  RefreshCw,
   Cpu,
   X,
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 
 const navItems = [
-  { href: '/nodo/dashboard',          label: 'Dashboard Local',     icon: LayoutDashboard },
   { href: '/nodo/inventario',         label: 'Mi Inventario',       icon: Package },
   { href: '/nodo/registrar-movimiento', label: 'Registrar Movimiento', icon: PlusCircle },
   { href: '/nodo/movimientos',        label: 'Movimientos Locales', icon: ArrowLeftRight },
   { href: '/nodo/alertas',            label: 'Alertas Locales',     icon: Bell },
-  { href: '/nodo/departamento',       label: 'Mi Departamento',     icon: Building2 },
-  { href: '/nodo/sincronizacion',     label: 'Sincronización',      icon: RefreshCw },
 ]
 
 interface NodeSidebarProps {

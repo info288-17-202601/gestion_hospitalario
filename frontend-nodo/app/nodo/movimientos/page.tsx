@@ -2,27 +2,43 @@
 
 import { useState, useEffect } from 'react'
 import { StatusBadge } from '@/components/status-badge'
-import { departments, inventoryMovements, supplies, users } from '@/lib/mock-data'
+import { departments, users } from '@/lib/mock-data'
+import { getInventoryMovements, getSupplies } from '@/lib/services'
+import type { InventoryMovement, Supply } from '@/lib/types'
 
 export default function NodeMovimientosPage() {
   const [deptId, setDeptId] = useState(1)
   const [dept, setDept] = useState(departments[0])
   const [filterType, setFilterType] = useState<string>('all')
+  const [movements, setMovements] = useState<InventoryMovement[]>([])
+  const [supplies, setSupplies] = useState<Supply[]>([])
 
   useEffect(() => {
     const storedDeptId = parseInt(sessionStorage.getItem('sghd_nodo_department') || '1', 10)
     setDeptId(storedDeptId)
     const found = departments.find(d => d.id === storedDeptId)
     if (found) setDept(found)
+
+    getInventoryMovements()
+      .then(setMovements)
+      .catch((error) => {
+        console.error('Error cargando movimientos:', error)
+      })
+
+    getSupplies()
+      .then(setSupplies)
+      .catch((error) => {
+        console.error('Error cargando insumos:', error)
+      })
   }, [])
 
-  const localMovements = inventoryMovements.filter(
-    m => m.source_department_id === deptId || m.destination_department_id === deptId
+  const localMovements = movements.filter(
+    (m) => m.source_department_id === deptId || m.destination_department_id === deptId
   )
 
   const filteredMovements = filterType === 'all'
     ? localMovements
-    : localMovements.filter(m => m.type === filterType)
+    : localMovements.filter((m) => m.type === filterType)
 
   return (
     <div className="space-y-6">
@@ -74,10 +90,10 @@ export default function NodeMovimientosPage() {
                 </tr>
               ) : (
                 filteredMovements.map((mov) => {
-                  const supply = supplies.find(s => s.id === mov.supply_id)
-                  const user = users.find(u => u.id === mov.user_id)
-                  const srcDept = departments.find(d => d.id === mov.source_department_id)
-                  const dstDept = departments.find(d => d.id === mov.destination_department_id)
+                  const supply = supplies.find((s) => s.id === mov.supply_id)
+                  const user = users.find((u) => u.id === mov.user_id)
+                  const srcDept = departments.find((d) => d.id === mov.source_department_id)
+                  const dstDept = departments.find((d) => d.id === mov.destination_department_id)
                   return (
                     <tr key={mov.id} className="border-b border-border last:border-0 hover:bg-muted/20">
                       <td className="px-5 py-3 text-muted-foreground">

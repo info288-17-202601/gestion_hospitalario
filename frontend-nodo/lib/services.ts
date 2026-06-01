@@ -82,8 +82,24 @@ export async function loginWithRfid(
 
 // ---- Categories ----
 
+type BackendSupplyCategory = {
+  ID: number
+  Name: string
+  Description: string
+}
+
+function mapSupplyCategory(item: BackendSupplyCategory): SupplyCategory {
+  return {
+    id: item.ID,
+    name: item.Name,
+    description: item.Description,
+  }
+}
+
 export async function getCategories(): Promise<SupplyCategory[]> {
-  return [...categories]
+  const res = await fetch(`${INVENTORY_API}/categories`)
+  const backendData = await handleInventoryResponse<BackendSupplyCategory[]>(res)
+  return backendData.map(mapSupplyCategory)
 }
 
 export async function createCategory(data: Omit<SupplyCategory, 'id'>): Promise<SupplyCategory> {
@@ -121,22 +137,64 @@ export async function updateDepartment(id: number, data: Partial<Omit<Department
   return departments[idx]
 }
 
+const INVENTORY_API = process.env.NEXT_PUBLIC_INVENTORY_API_BASE || 'http://localhost:7010/api/v1/inventory'
+
+async function handleInventoryResponse<T>(res: Response): Promise<T> {
+  if (!res.ok) {
+    const errorText = await res.text()
+    throw new Error(errorText || 'Error al comunicarse con el Inventory Service')
+  }
+  return res.json()
+}
+
 // ---- Supplies ----
 
+type BackendSupply = {
+  ID: number
+  InternalCode: string
+  Name: string
+  Description: string
+  UnitOfMeasure: string
+  MinimumStock: number
+  CategoryID: number
+  IsActive: boolean
+}
+
+function mapSupply(item: BackendSupply): Supply {
+  return {
+    id: item.ID,
+    internal_code: item.InternalCode,
+    name: item.Name,
+    description: item.Description,
+    unit_of_measure: item.UnitOfMeasure,
+    minimum_stock: item.MinimumStock,
+    category_id: item.CategoryID,
+    is_active: item.IsActive,
+  }
+}
+
 export async function getSupplies(): Promise<Supply[]> {
-  return [...supplies]
+  const res = await fetch(`${INVENTORY_API}/supplies`)
+  const backendData = await handleInventoryResponse<BackendSupply[]>(res)
+  return backendData.map(mapSupply)
 }
 
 export async function createSupply(data: Omit<Supply, 'id'>): Promise<Supply> {
-  const item: Supply = { id: nextId(), ...data }
-  supplies.push(item)
-  return item
+  const res = await fetch(`${INVENTORY_API}/supplies`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  return handleInventoryResponse<Supply>(res)
 }
 
 export async function updateSupply(id: number, data: Partial<Omit<Supply, 'id'>>): Promise<Supply> {
-  const idx = supplies.findIndex((s) => s.id === id)
-  supplies[idx] = { ...supplies[idx], ...data }
-  return supplies[idx]
+  const res = await fetch(`${INVENTORY_API}/supplies/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  return handleInventoryResponse<Supply>(res)
 }
 
 // ---- Users ----
@@ -171,24 +229,114 @@ export async function updateAlertStatus(id: number, status: AlertStatus): Promis
 
 // ---- Department Inventory ----
 
+type BackendDepartmentInventory = {
+  ID: number
+  DepartmentID: number
+  SupplyID: number
+  Quantity: number
+  UpdatedAt: string
+}
+
+function mapDepartmentInventory(item: BackendDepartmentInventory): DepartmentInventory {
+  return {
+    id: item.ID,
+    department_id: item.DepartmentID,
+    supply_id: item.SupplyID,
+    quantity: item.Quantity,
+    minimum_stock: 0, // Will be populated from supplies data
+  }
+}
+
 export async function getDepartmentInventory(): Promise<DepartmentInventory[]> {
-  return [...departmentInventory]
+  const res = await fetch(`${INVENTORY_API}/departments/stock`)
+  const backendData = await handleInventoryResponse<BackendDepartmentInventory[]>(res)
+  
+  // Get supplies to populate minimum_stock
+  const suppliesData = await getSupplies()
+  const supplyMap = new Map(suppliesData.map(s => [s.id, s]))
+  
+  return backendData.map(item => {
+    const mapped = mapDepartmentInventory(item)
+    const supply = supplyMap.get(item.SupplyID)
+    if (supply) {
+      mapped.minimum_stock = supply.minimum_stock
+    }
+    return mapped
+  })
 }
 
 // ---- Inventory Movements ----
 
-export async function getInventoryMovements(): Promise<InventoryMovement[]> {
-  return [...inventoryMovements]
+type BackendInventoryMovement = {
+  ID: number
+  Type: string
+  Quantity: number
+  MovementDate: string
+  Observations: string
+  UserID: number
+  SupplyID: number
+  OriginDepartmentID: number | null
+  DestinationDepartmentID: number | null
 }
 
-export async function createMovement(data: Omit<InventoryMovement, 'id' | 'created_at'>): Promise<InventoryMovement> {
-  const item: InventoryMovement = {
-    id: nextId(),
-    created_at: new Date().toISOString(),
-    ...data,
+function mapInventoryMovement(item: BackendInventoryMovement): InventoryMovement {
+  return {
+    id: item.ID,
+    type: item.Type as MovementType,
+    quantity: item.Quantity,
+    created_at: item.MovementDate,
+    supply_id: item.SupplyID,
+    user_id: item.UserID,
+    source_department_id: item.OriginDepartmentID,
+    destination_department_id: item.DestinationDepartmentID,
+    observations: item.Observations,
   }
-  inventoryMovements.unshift(item)
-  return item
+}
+
+export async function getInventoryMovements(): Promise<InventoryMovement[]> {
+  const res = await fetch(`${INVENTORY_API}/movements`)
+  const backendData = await handleInventoryResponse<BackendInventoryMovement[]>(res)
+  return backendData.map(mapInventoryMovement)
+}
+
+export async function createMovement(data: {
+  supply_id: number
+  quantity: number
+  source_department_id: number
+  destination_department_id: number
+  observations: string
+  user_id: number
+}): Promise<InventoryMovement> {
+  const payload = {
+    supply_id: data.supply_id,
+    quantity: data.quantity,
+    origin_department_id: data.source_department_id,
+    destination_department_id: data.destination_department_id,
+    observations: data.observations,
+    user_id: data.user_id,
+  }
+
+  const res = await fetch(`${INVENTORY_API}/movements`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  })
+
+  return handleInventoryResponse<InventoryMovement>(res)
+}
+
+export async function modifyDepartmentStock(data: {
+  supply_id: number
+  quantity_change: number
+  observations: string
+  user_id: number
+}): Promise<InventoryMovement> {
+  const res = await fetch(`${INVENTORY_API}/departments/stock`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(data),
+  })
+  return handleInventoryResponse<InventoryMovement>(res)
 }
 
 // ---- RFID Cards ----

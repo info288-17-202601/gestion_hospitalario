@@ -55,7 +55,7 @@ export default function LoginPage() {
         sessionStorage.setItem('sghd_user', JSON.stringify(sessionUser))
         setMessage({ type: 'success', text: 'Acceso exitoso. Redirigiendo...' })
 
-        router.push('/nodo/dashboard')
+        router.push('/nodo/inventario')
       } else {
         const text = result.message || 'No se pudo iniciar sesión con la tarjeta.'
         setMessage({ type: 'error', text })
@@ -89,7 +89,7 @@ export default function LoginPage() {
     if (result.success && result.user) {
       setMessage({ type: 'success', text: 'Acceso exitoso. Redirigiendo...' })
       sessionStorage.setItem('sghd_user', JSON.stringify(result.user))
-      setTimeout(() => router.push('/nodo/dashboard'), 800)
+      setTimeout(() => router.push('/nodo/inventario'), 800)
     } else {
       setMessage({ type: 'error', text: result.reason ?? 'Credenciales inválidas' })
     }

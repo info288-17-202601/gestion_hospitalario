@@ -2,7 +2,9 @@
 
 import { useState, useEffect } from 'react'
 import { PlusCircle, CheckCircle } from 'lucide-react'
-import { departments, supplies, departmentInventory, inventoryMovements, nextId } from '@/lib/mock-data'
+import { departments } from '@/lib/mock-data'
+import { getDepartmentInventory, getSupplies, createMovement, modifyDepartmentStock } from '@/lib/services'
+import type { DepartmentInventory, InventoryMovement, Supply } from '@/lib/types'
 
 type MovementType = 'entrada' | 'salida' | 'transferencia'
 
@@ -15,58 +17,71 @@ export default function NodeRegistrarMovimientoPage() {
   const [destDeptId, setDestDeptId] = useState('')
   const [observations, setObservations] = useState('')
   const [success, setSuccess] = useState(false)
+  const [inventory, setInventory] = useState<DepartmentInventory[]>([])
+  const [supplies, setSupplies] = useState<Supply[]>([])
 
   useEffect(() => {
     const storedDeptId = parseInt(sessionStorage.getItem('sghd_nodo_department') || '1', 10)
     setDeptId(storedDeptId)
     const found = departments.find(d => d.id === storedDeptId)
     if (found) setDept(found)
+
+    Promise.all([getDepartmentInventory(), getSupplies()])
+      .then(([inventoryData, suppliesData]) => {
+        setInventory(inventoryData)
+        setSupplies(suppliesData)
+      })
+      .catch((error) => {
+        console.error('Error cargando datos de movimiento:', error)
+      })
   }, [])
 
-  const localInventory = departmentInventory.filter(inv => inv.department_id === deptId)
-  const availableSupplies = supplies.filter(s => 
-    s.is_active && localInventory.some(inv => inv.supply_id === s.id)
-  )
+  const localInventory = inventory.filter(inv => inv.department_id === deptId)
+  const availableSupplies = supplies.filter((s) => {
+    if (!s.is_active) return false
+    return type === 'entrada'
+      ? true
+      : localInventory.some(inv => inv.supply_id === s.id)
+  })
   const otherDepartments = departments.filter(d => d.id !== deptId && d.is_active)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    
-    const newMovement = {
-      id: nextId(),
-      type,
-      quantity: parseInt(quantity, 10),
-      created_at: new Date().toISOString(),
-      supply_id: parseInt(supplyId, 10),
-      user_id: 1,
-      source_department_id: type === 'entrada' ? null : deptId,
-      destination_department_id: type === 'salida' ? null : (type === 'transferencia' ? parseInt(destDeptId, 10) : deptId),
-      observations: observations || null,
-    }
-    
-    inventoryMovements.push(newMovement)
-    
-    // Update inventory quantity
-    const invItem = departmentInventory.find(
-      inv => inv.department_id === deptId && inv.supply_id === parseInt(supplyId, 10)
-    )
-    if (invItem) {
-      if (type === 'entrada') {
-        invItem.quantity += parseInt(quantity, 10)
+    const supplyIdNumber = parseInt(supplyId, 10)
+    const quantityNumber = parseInt(quantity, 10)
+
+    try {
+      if (type === 'transferencia') {
+        await createMovement({
+          supply_id: supplyIdNumber,
+          quantity: quantityNumber,
+          source_department_id: deptId,
+          destination_department_id: parseInt(destDeptId, 10),
+          observations,
+          user_id: 1,
+        })
       } else {
-        invItem.quantity -= parseInt(quantity, 10)
+        const quantityChange = type === 'entrada' ? quantityNumber : -quantityNumber
+        await modifyDepartmentStock({
+          supply_id: supplyIdNumber,
+          quantity_change: quantityChange,
+          observations,
+          user_id: 1,
+        })
       }
+
+      setSuccess(true)
+      setTimeout(() => {
+        setSuccess(false)
+        setType('entrada')
+        setSupplyId('')
+        setQuantity('')
+        setDestDeptId('')
+        setObservations('')
+      }, 2000)
+    } catch (error) {
+      console.error('Error registrando movimiento:', error)
     }
-    
-    setSuccess(true)
-    setTimeout(() => {
-      setSuccess(false)
-      setType('entrada')
-      setSupplyId('')
-      setQuantity('')
-      setDestDeptId('')
-      setObservations('')
-    }, 2000)
   }
 
   return (
@@ -87,7 +102,7 @@ export default function NodeRegistrarMovimientoPage() {
               </div>
               <h3 className="text-lg font-semibold text-foreground">Movimiento Registrado</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                El movimiento ha sido registrado y está pendiente de sincronización
+                El movimiento ha sido registrado correctamente
               </p>
             </div>
           ) : (
@@ -167,7 +182,7 @@ export default function NodeRegistrarMovimientoPage() {
                     className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   >
                     <option value="">Seleccionar departamento</option>
-                    {otherDepartments.map((d) => (
+                    {departments.filter((d) => d.id !== deptId && d.is_active).map((d) => (
                       <option key={d.id} value={d.id}>
                         {d.name}
                       </option>

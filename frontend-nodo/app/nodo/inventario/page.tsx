@@ -3,21 +3,36 @@
 import { useState, useEffect } from 'react'
 import { Search } from 'lucide-react'
 import { StatusBadge } from '@/components/status-badge'
-import { departmentInventory, supplies, categories, departments } from '@/lib/mock-data'
+import { departments } from '@/lib/mock-data'
+import { getCategories, getDepartmentInventory, getSupplies } from '@/lib/services'
+import type { DepartmentInventory, Supply, SupplyCategory } from '@/lib/types'
 
 export default function NodeInventarioPage() {
   const [deptId, setDeptId] = useState(1)
   const [search, setSearch] = useState('')
   const [dept, setDept] = useState(departments[0])
+  const [inventory, setInventory] = useState<DepartmentInventory[]>([])
+  const [supplies, setSupplies] = useState<Supply[]>([])
+  const [categories, setCategories] = useState<SupplyCategory[]>([])
 
   useEffect(() => {
     const storedDeptId = parseInt(sessionStorage.getItem('sghd_nodo_department') || '1', 10)
     setDeptId(storedDeptId)
     const found = departments.find(d => d.id === storedDeptId)
     if (found) setDept(found)
+
+    Promise.all([getDepartmentInventory(), getSupplies(), getCategories()])
+      .then(([inventoryData, suppliesData, categoriesData]) => {
+        setInventory(inventoryData)
+        setSupplies(suppliesData)
+        setCategories(categoriesData)
+      })
+      .catch((error) => {
+        console.error('Error cargando inventario:', error)
+      })
   }, [])
 
-  const localInventory = departmentInventory.filter(inv => inv.department_id === deptId)
+  const localInventory = inventory.filter(inv => inv.department_id === deptId)
 
   const filteredInventory = localInventory.filter((inv) => {
     const supply = supplies.find(s => s.id === inv.supply_id)
