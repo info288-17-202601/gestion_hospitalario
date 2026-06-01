@@ -34,14 +34,36 @@ export default function MovimientosPage() {
   })
 
   useEffect(() => {
-    Promise.all([getInventoryMovements(), getDepartments(), getSupplies(), getUsers()]).then(
-      ([mv, dp, sp, us]) => {
+    const fetchData = async () => {
+      try {
+        const [mvRes, deptRes, supRes, userRes] = await Promise.all([
+          fetch('http://localhost:7020/api/reports/movements'),
+          fetch('http://localhost:7020/api/reports/departments'),
+          fetch('http://localhost:7020/api/reports/supplies'),
+          fetch('http://localhost:7020/api/reports/users')
+        ])
+
+        if (!mvRes.ok || !deptRes.ok || !supRes.ok || !userRes.ok) {
+          throw new Error('Error fetching data')
+        }
+
+        const [mv, dp, sp, us] = await Promise.all([
+          mvRes.json(),
+          deptRes.json(),
+          supRes.json(),
+          userRes.json()
+        ])
+
         setMovements(mv)
         setDepartments(dp)
         setSupplies(sp)
         setUsers(us)
+      } catch (error) {
+        console.error(error)
       }
-    )
+    }
+
+    fetchData()
   }, [])
 
   const getSupplyName = (id: number) => supplies.find((s) => s.id === id)?.name ?? '-'
@@ -56,7 +78,8 @@ export default function MovimientosPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const newMv = await createMovement({
+    
+    const payload = {
       type: form.type,
       supply_id: Number(form.supply_id),
       quantity: Number(form.quantity),
@@ -64,10 +87,25 @@ export default function MovimientosPage() {
       source_department_id: form.source_department_id ? Number(form.source_department_id) : null,
       destination_department_id: form.destination_department_id ? Number(form.destination_department_id) : null,
       observations: form.observations,
-    })
-    setMovements((prev) => [newMv, ...prev])
-    setModalOpen(false)
-    setForm({ type: 'entrada', supply_id: '', quantity: '', user_id: '', source_department_id: '', destination_department_id: '', observations: '' })
+    }
+
+    try {
+      const res = await fetch('http://localhost:7020/api/reports/movements', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+      })
+
+      if (!res.ok) throw new Error('Error creating movement')
+      
+      const newMv = await res.json()
+      setMovements((prev) => [newMv, ...prev])
+      setModalOpen(false)
+      setForm({ type: 'entrada', supply_id: '', quantity: '', user_id: '', source_department_id: '', destination_department_id: '', observations: '' })
+    } catch (err) {
+      console.error(err)
+      alert('Hubo un error al registrar el movimiento.')
+    }
   }
 
   const showSource = form.type === 'salida' || form.type === 'transferencia' || form.type === 'ajuste'

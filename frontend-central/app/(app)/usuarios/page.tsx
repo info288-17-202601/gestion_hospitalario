@@ -4,9 +4,7 @@ import { useEffect, useState } from 'react'
 import { Plus, Pencil, Power, CreditCard, KeyRound } from 'lucide-react'
 import { StatusBadge } from '@/components/status-badge'
 import { FormModal } from '@/components/form-modal'
-import { getUsers, createUser, updateUser, getDepartments, getRfidCards } from '@/lib/services'
-import { userPinCredentials } from '@/lib/mock-data'
-import type { User, UserRole, Department, RfidCard } from '@/lib/types'
+import type { User, UserRole, Department, RfidCard, UserPinCredential } from '@/lib/types'
 
 const ROLES: UserRole[] = ['Administrador', 'Enfermero', 'Farmacéutico', 'Bodega', 'Jefatura']
 
@@ -28,6 +26,7 @@ export default function UsuariosPage() {
   const [users, setUsers] = useState<User[]>([])
   const [departments, setDepartments] = useState<Department[]>([])
   const [rfidCards, setRfidCards] = useState<RfidCard[]>([])
+  const [userPins, setUserPins] = useState<UserPinCredential[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [rfidModalOpen, setRfidModalOpen] = useState(false)
   const [editing, setEditing] = useState<User | null>(null)
@@ -35,37 +34,71 @@ export default function UsuariosPage() {
   const [rfidUser, setRfidUser] = useState<User | null>(null)
 
   useEffect(() => {
-    Promise.all([getUsers(), getDepartments(), getRfidCards()]).then(([us, dp, rc]) => {
+    Promise.all([
+      fetch('http://localhost:7020/api/reports/users').then(r => r.json()),
+      fetch('http://localhost:7020/api/reports/departments').then(r => r.json()),
+      fetch('http://localhost:7020/api/reports/rfid-cards').then(r => r.json()),
+      fetch('http://localhost:7020/api/reports/user-pins').then(r => r.json())
+    ]).then(([us, dp, rc, up]) => {
       setUsers(us)
       setDepartments(dp)
       setRfidCards(rc)
-    })
+      setUserPins(up)
+    }).catch(console.error)
   }, [])
 
   const getDeptName = (id: number) => departments.find((d) => d.id === id)?.name ?? '-'
   const getUserCard = (userId: number) => rfidCards.find((c) => c.user_id === userId)
-  const getUserPin = (userId: number) => userPinCredentials.find((p) => p.user_id === userId)
+  const getUserPin = (userId: number) => userPins.find((p) => p.user_id === userId)
 
   const openCreate = () => { setEditing(null); setForm({ ...emptyForm, department_id: departments[0]?.id ?? 1 }); setModalOpen(true) }
   const openEdit = (u: User) => { setEditing(u); setForm({ ...u, password: '' }); setModalOpen(true) }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    const { password, ...userData } = form
-    if (editing) {
-      const updated = await updateUser(editing.id, userData)
-      setUsers((prev) => prev.map((u) => (u.id === editing.id ? updated : u)))
-    } else {
-      const created = await createUser(userData)
-      setUsers((prev) => [...prev, created])
+    try {
+      if (editing) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        const { password, ...userData } = form
+        const res = await fetch(`http://localhost:7020/api/reports/users/${editing.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(userData)
+        })
+        if (!res.ok) throw new Error('Error updating')
+        const updated = await res.json()
+        setUsers((prev) => prev.map((u) => (u.id === editing.id ? updated : u)))
+      } else {
+        const res = await fetch('http://localhost:7020/api/reports/users', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form)
+        })
+        if (!res.ok) throw new Error('Error creating')
+        const created = await res.json()
+        setUsers((prev) => [...prev, created])
+      }
+      setModalOpen(false)
+    } catch (err) {
+      console.error(err)
+      alert('Error al guardar el usuario')
     }
-    setModalOpen(false)
   }
 
   const handleToggle = async (u: User) => {
-    const updated = await updateUser(u.id, { is_active: !u.is_active })
-    setUsers((prev) => prev.map((x) => (x.id === u.id ? updated : x)))
+    try {
+      const res = await fetch(`http://localhost:7020/api/reports/users/${u.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...u, is_active: !u.is_active })
+      })
+      if (!res.ok) throw new Error('Error updating')
+      const updated = await res.json()
+      setUsers((prev) => prev.map((x) => (x.id === u.id ? updated : x)))
+    } catch (err) {
+      console.error(err)
+      alert('Error al actualizar estado')
+    }
   }
 
   const inputClass = 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20'

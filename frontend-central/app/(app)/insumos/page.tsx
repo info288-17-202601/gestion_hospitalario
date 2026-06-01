@@ -4,9 +4,7 @@ import { useEffect, useState } from 'react'
 import { Plus, Pencil, Power } from 'lucide-react'
 import { StatusBadge } from '@/components/status-badge'
 import { FormModal } from '@/components/form-modal'
-import { getSupplies, createSupply, updateSupply } from '@/lib/services'
-import { categories } from '@/lib/mock-data'
-import type { Supply } from '@/lib/types'
+import type { Supply, SupplyCategory } from '@/lib/types'
 
 type FormState = Omit<Supply, 'id'>
 
@@ -21,12 +19,30 @@ const emptyForm: FormState = {
 }
 
 export default function InsumosPage() {
+  const [categories, setCategories] = useState<SupplyCategory[]>([])
   const [supplies, setSupplies] = useState<Supply[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [editing, setEditing] = useState<Supply | null>(null)
   const [form, setForm] = useState<FormState>(emptyForm)
 
-  useEffect(() => { getSupplies().then(setSupplies) }, [])
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const [supRes, catRes] = await Promise.all([
+          fetch('http://localhost:7020/api/reports/supplies'),
+          fetch('http://localhost:7020/api/reports/categories')
+        ])
+        if (!supRes.ok || !catRes.ok) throw new Error('Error fetching data')
+        
+        const [sups, cats] = await Promise.all([supRes.json(), catRes.json()])
+        setSupplies(sups)
+        setCategories(cats)
+      } catch (err) {
+        console.error(err)
+      }
+    }
+    fetchData()
+  }, [])
 
   const getCategoryName = (id: number) => categories.find((c) => c.id === id)?.name ?? '-'
 
@@ -35,19 +51,47 @@ export default function InsumosPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (editing) {
-      const updated = await updateSupply(editing.id, form)
-      setSupplies((prev) => prev.map((s) => (s.id === editing.id ? updated : s)))
-    } else {
-      const created = await createSupply(form)
-      setSupplies((prev) => [...prev, created])
+    try {
+      if (editing) {
+        const res = await fetch(`http://localhost:7020/api/reports/supplies/${editing.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form)
+        })
+        if (!res.ok) throw new Error('Error updating')
+        const updated = await res.json()
+        setSupplies((prev) => prev.map((s) => (s.id === editing.id ? updated : s)))
+      } else {
+        const res = await fetch('http://localhost:7020/api/reports/supplies', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form)
+        })
+        if (!res.ok) throw new Error('Error creating')
+        const created = await res.json()
+        setSupplies((prev) => [...prev, created])
+      }
+      setModalOpen(false)
+    } catch (err) {
+      console.error(err)
+      alert('Error al guardar el insumo.')
     }
-    setModalOpen(false)
   }
 
   const handleToggle = async (s: Supply) => {
-    const updated = await updateSupply(s.id, { is_active: !s.is_active })
-    setSupplies((prev) => prev.map((x) => (x.id === s.id ? updated : x)))
+    try {
+      const res = await fetch(`http://localhost:7020/api/reports/supplies/${s.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ...s, is_active: !s.is_active })
+      })
+      if (!res.ok) throw new Error('Error updating')
+      const updated = await res.json()
+      setSupplies((prev) => prev.map((x) => (x.id === s.id ? updated : x)))
+    } catch (err) {
+      console.error(err)
+      alert('Error al actualizar estado.')
+    }
   }
 
   const inputClass = 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20'

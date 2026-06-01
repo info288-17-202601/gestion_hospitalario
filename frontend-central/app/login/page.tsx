@@ -38,24 +38,24 @@ export default function LoginPage() {
       if (result.success) {
         const sessionUser = result.user
           ? {
-              id: result.user.id,
-              name: result.user.name,
-              role: result.user.role as any,
-              department: `Departamento ${result.user.department_id}`,
-              rut: '',
-            }
+            id: result.user.id,
+            name: result.user.name,
+            role: result.user.role as any,
+            department: `Departamento ${result.user.department_id}`,
+            rut: '',
+          }
           : {
-              id: 0,
-              name: 'Usuario RFID',
-              role: 'Farmacéutico',
-              department: 'RFID',
-              rut: '',
-            }
+            id: 0,
+            name: 'Usuario RFID',
+            role: 'Farmacéutico',
+            department: 'RFID',
+            rut: '',
+          }
 
         sessionStorage.setItem('sghd_user', JSON.stringify(sessionUser))
         setMessage({ type: 'success', text: 'Acceso exitoso. Redirigiendo...' })
 
-        router.push('/dashboard')
+        router.push('/inventario')
       } else {
         const text = result.message || 'No se pudo iniciar sesión con la tarjeta.'
         setMessage({ type: 'error', text })
@@ -89,13 +89,13 @@ export default function LoginPage() {
     if (result.success && result.user) {
       setMessage({ type: 'success', text: 'Acceso exitoso. Redirigiendo...' })
       sessionStorage.setItem('sghd_user', JSON.stringify(result.user))
-      setTimeout(() => router.push('/dashboard'), 800)
+      setTimeout(() => router.push('/inventario'), 800)
     } else {
       setMessage({ type: 'error', text: result.reason ?? 'Credenciales inválidas' })
     }
   }
 
-  
+
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -112,45 +112,42 @@ export default function LoginPage() {
         </div>
 
         {/* Card */}
-          <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-            {/* Tabs */}
-            <div className="flex border-b border-border">
-              <button
-                type="button"
-                onClick={() => { setTab('password'); setMessage(null) }}
-                className={`flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-medium transition-colors ${
-                  tab === 'password'
-                    ? 'border-b-2 border-primary text-primary bg-primary/5'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+          {/* Tabs */}
+          <div className="flex border-b border-border">
+            <button
+              type="button"
+              onClick={() => { setTab('password'); setMessage(null) }}
+              className={`flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-medium transition-colors ${tab === 'password'
+                  ? 'border-b-2 border-primary text-primary bg-primary/5'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                 }`}
-              >
-                <User className="h-4 w-4" />
-                Acceso Tradicional
-              </button>
+            >
+              <User className="h-4 w-4" />
+              Acceso Tradicional
+            </button>
 
-              <button
-                type="button"
-                onClick={() => { setTab('rfid'); setMessage(null) }}
-                className={`flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-medium transition-colors ${
-                  tab === 'rfid'
-                    ? 'border-b-2 border-primary text-primary bg-primary/5'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+            <button
+              type="button"
+              onClick={() => { setTab('rfid'); setMessage(null) }}
+              className={`flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-medium transition-colors ${tab === 'rfid'
+                  ? 'border-b-2 border-primary text-primary bg-primary/5'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
                 }`}
-              >
-                <CreditCard className="h-4 w-4" />
-                RFID / NFC
-              </button>
-            </div>
+            >
+              <CreditCard className="h-4 w-4" />
+              RFID / NFC
+            </button>
+          </div>
 
-            <div className="p-6">
+          <div className="p-6">
             {/* Message */}
             {message && (
               <div
-                className={`mb-5 flex items-center gap-2.5 rounded-lg border px-4 py-3 text-sm ${
-                  message.type === 'error'
+                className={`mb-5 flex items-center gap-2.5 rounded-lg border px-4 py-3 text-sm ${message.type === 'error'
                     ? 'border-red-200 bg-red-50 text-red-700'
                     : 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                }`}
+                  }`}
                 role="alert"
               >
                 {message.type === 'error' ? (

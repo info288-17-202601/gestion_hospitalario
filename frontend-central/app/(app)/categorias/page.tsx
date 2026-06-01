@@ -3,7 +3,6 @@
 import { useEffect, useState } from 'react'
 import { Plus, Pencil, Trash2 } from 'lucide-react'
 import { FormModal } from '@/components/form-modal'
-import { getCategories, createCategory, updateCategory, deleteCategory } from '@/lib/services'
 import type { SupplyCategory } from '@/lib/types'
 
 const emptyForm = { name: '', description: '' }
@@ -15,27 +14,55 @@ export default function CategoriasPage() {
   const [form, setForm] = useState(emptyForm)
   const [confirmDelete, setConfirmDelete] = useState<number | null>(null)
 
-  useEffect(() => { getCategories().then(setCats) }, [])
+  useEffect(() => {
+    fetch('http://localhost:7020/api/reports/categories')
+      .then(res => res.json())
+      .then(setCats)
+      .catch(console.error)
+  }, [])
 
   const openCreate = () => { setEditing(null); setForm(emptyForm); setModalOpen(true) }
   const openEdit = (c: SupplyCategory) => { setEditing(c); setForm({ name: c.name, description: c.description }); setModalOpen(true) }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    if (editing) {
-      const updated = await updateCategory(editing.id, form)
-      setCats((prev) => prev.map((c) => (c.id === editing.id ? updated : c)))
-    } else {
-      const created = await createCategory(form)
-      setCats((prev) => [...prev, created])
+    try {
+      if (editing) {
+        const res = await fetch(`http://localhost:7020/api/reports/categories/${editing.id}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form)
+        })
+        if (!res.ok) throw new Error('Error updating')
+        const updated = await res.json()
+        setCats((prev) => prev.map((c) => (c.id === editing.id ? updated : c)))
+      } else {
+        const res = await fetch('http://localhost:7020/api/reports/categories', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(form)
+        })
+        if (!res.ok) throw new Error('Error creating')
+        const created = await res.json()
+        setCats((prev) => [...prev, created])
+      }
+      setModalOpen(false)
+    } catch (err) {
+      console.error(err)
+      alert('Error al guardar la categoría')
     }
-    setModalOpen(false)
   }
 
   const handleDelete = async (id: number) => {
-    await deleteCategory(id)
-    setCats((prev) => prev.filter((c) => c.id !== id))
-    setConfirmDelete(null)
+    try {
+      const res = await fetch(`http://localhost:7020/api/reports/categories/${id}`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Error deleting')
+      setCats((prev) => prev.filter((c) => c.id !== id))
+      setConfirmDelete(null)
+    } catch (err) {
+      console.error(err)
+      alert('Error al eliminar la categoría')
+    }
   }
 
   const inputClass = 'w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20'
@@ -48,13 +75,6 @@ export default function CategoriasPage() {
           <h1 className="text-xl font-bold text-foreground">Categorías de Insumos</h1>
           <p className="text-sm text-muted-foreground mt-0.5">Clasificación de insumos del inventario</p>
         </div>
-        <button
-          onClick={openCreate}
-          className="flex items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-white hover:bg-primary/90 transition-colors"
-        >
-          <Plus className="h-4 w-4" />
-          Nueva categoría
-        </button>
       </div>
 
       <div className="rounded-lg border border-border bg-card shadow-sm overflow-hidden">
@@ -63,12 +83,11 @@ export default function CategoriasPage() {
             <tr className="border-b border-border bg-muted/40 text-muted-foreground">
               <th className="px-4 py-3 text-left font-medium">Nombre</th>
               <th className="px-4 py-3 text-left font-medium">Descripción</th>
-              <th className="px-4 py-3 text-left font-medium">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {cats.length === 0 && (
-              <tr><td colSpan={3} className="px-4 py-8 text-center text-muted-foreground">Sin categorías</td></tr>
+              <tr><td colSpan={2} className="px-4 py-8 text-center text-muted-foreground">Sin categorías</td></tr>
             )}
             {cats.map((c) => (
               <tr key={c.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors last:border-0">
@@ -76,20 +95,6 @@ export default function CategoriasPage() {
                 <td className="px-4 py-3 text-muted-foreground">{c.description}</td>
                 <td className="px-4 py-3">
                   <div className="flex gap-2">
-                    <button
-                      onClick={() => openEdit(c)}
-                      className="flex items-center gap-1 rounded border border-border px-2.5 py-1 text-xs font-medium text-muted-foreground hover:bg-secondary transition-colors"
-                    >
-                      <Pencil className="h-3 w-3" />
-                      Editar
-                    </button>
-                    <button
-                      onClick={() => setConfirmDelete(c.id)}
-                      className="flex items-center gap-1 rounded border border-red-200 px-2.5 py-1 text-xs font-medium text-red-600 hover:bg-red-50 transition-colors"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                      Eliminar
-                    </button>
                   </div>
                 </td>
               </tr>

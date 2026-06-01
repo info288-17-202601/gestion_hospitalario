@@ -4,8 +4,7 @@ import { useEffect, useState, useMemo } from 'react'
 import { Search, PlusCircle, List } from 'lucide-react'
 import { StatusBadge } from '@/components/status-badge'
 import { getDepartmentInventory, getDepartments, getSupplies } from '@/lib/services'
-import { categories } from '@/lib/mock-data'
-import type { DepartmentInventory, Department, Supply } from '@/lib/types'
+import type { DepartmentInventory, Department, Supply, SupplyCategory } from '@/lib/types'
 import { useRouter } from 'next/navigation'
 
 export default function InventarioPage() {
@@ -13,18 +12,42 @@ export default function InventarioPage() {
   const [inventory, setInventory] = useState<DepartmentInventory[]>([])
   const [departments, setDepartments] = useState<Department[]>([])
   const [supplies, setSupplies] = useState<Supply[]>([])
+  const [categories, setCategories] = useState<SupplyCategory[]>([])
   const [searchTerm, setSearchTerm] = useState('')
   const [deptFilter, setDeptFilter] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
 
   useEffect(() => {
-    Promise.all([getDepartmentInventory(), getDepartments(), getSupplies()]).then(
-      ([inv, deps, sups]) => {
+    const fetchData = async () => {
+      try {
+        const [invRes, deptRes, supRes, catRes] = await Promise.all([
+          fetch('http://localhost:7020/api/reports/inventory'),
+          fetch('http://localhost:7020/api/reports/departments'),
+          fetch('http://localhost:7020/api/reports/supplies'),
+          fetch('http://localhost:7020/api/reports/categories')
+        ])
+
+        if (!invRes.ok || !deptRes.ok || !supRes.ok || !catRes.ok) {
+          throw new Error('Error fetching data')
+        }
+
+        const [inv, deps, sups, cats] = await Promise.all([
+          invRes.json(),
+          deptRes.json(),
+          supRes.json(),
+          catRes.json()
+        ])
+
         setInventory(inv)
         setDepartments(deps)
         setSupplies(sups)
+        setCategories(cats)
+      } catch (error) {
+        console.error(error)
       }
-    )
+    }
+
+    fetchData()
   }, [])
 
   const getSupply = (id: number) => supplies.find((s) => s.id === id)

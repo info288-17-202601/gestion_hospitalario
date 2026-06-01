@@ -16,6 +16,14 @@ import (
 func SetupRouter(handler *handlers.AlertHandler) *gin.Engine {
 	router := gin.Default()
 
+	// CORS Policies matching Authentication configurations
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	config.AllowHeaders = []string{"*"}
+	config.ExposeHeaders = []string{"*"}
+	router.Use(cors.New(config))
+
 	// Global Health Endpoint
 	router.GET("/health", func(c *gin.Context) {
 		c.JSON(200, gin.H{
@@ -47,14 +55,6 @@ func SetupRouter(handler *handlers.AlertHandler) *gin.Engine {
 			}
 		}
 	}
-
-	// CORS Policies matching Authentication configurations
-	router.Use(cors.New(cors.Config{
-		AllowOrigins:  []string{"http://api.hospital.cl", "http://localhost:*"},
-		AllowMethods:  []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:  []string{"*"},
-		ExposeHeaders: []string{"*"},
-	}))
 
 	return router
 }
