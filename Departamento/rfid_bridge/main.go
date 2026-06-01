@@ -5,20 +5,34 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
-	"go.bug.st/serial"
 	"io"
 	"net/http"
 	"os"
 	"strings"
 	"time"
+
+	"github.com/caarlos0/env/v10"
+	"github.com/joho/godotenv"
+	"go.bug.st/serial"
 )
 
-const (
-	SerialPort     = "/dev/ttyACM0"
-	BaudRate       = 9600
-	APIURL         = "http://localhost:7050/api/v1/auth/login/rfid"
-	ConnectTimeout = 60 * time.Second
-)
+type Config struct {
+	SerialPort     string        `env:"RFID_PORT" envDefault:"/dev/ttyACM0"`
+	BaudRate       int           `env:"RFID_BAUD" envDefault:"9600"`
+	APIURL         string        `env:"RFID_API_URL" envDefault:"http://localhost:7050/api/v1/auth/login/rfid"`
+	ConnectTimeout time.Duration `env:"RFID_CONNECT_TIMEOUT" envDefault:"60s"`
+}
+
+var cfg Config
+
+func init() {
+	_ = godotenv.Load(".env", "../.env")
+
+	if err := env.Parse(&cfg); err != nil {
+		fmt.Printf("Error al parsear variables de entorno: %v\n", err)
+		os.Exit(1)
+	}
+}
 
 type RFIDLoginRequest struct {
 	UID string `json:"uid"`
@@ -35,7 +49,7 @@ func sendToBackend(payload RFIDLoginRequest) error {
 		Timeout: 15 * time.Second,
 	}
 
-	resp, err := client.Post(APIURL, "application/json", bytes.NewBuffer(body))
+	resp, err := client.Post(cfg.APIURL, "application/json", bytes.NewBuffer(body))
 	if err != nil {
 		return err
 	}
@@ -83,17 +97,17 @@ func main() {
 	}
 
 	fmt.Println("Bridge RFID iniciado")
-	fmt.Println("Puerto serial:", SerialPort)
-	fmt.Println("Backend:", APIURL)
+	fmt.Println("Puerto serial:", cfg.SerialPort)
+	fmt.Println("Backend:", cfg.APIURL)
 
-	deadline := time.Now().Add(ConnectTimeout)
+	deadline := time.Now().Add(cfg.ConnectTimeout)
 	var port io.ReadCloser
 	for {
 		serialMode := &serial.Mode{
-			BaudRate: BaudRate,
+			BaudRate: cfg.BaudRate,
 		}
 
-		p, err := serial.Open(SerialPort, serialMode)
+		p, err := serial.Open(cfg.SerialPort, serialMode)
 		if err != nil {
 			if time.Now().After(deadline) {
 				fmt.Println("No esta conectado el lector, tiempo de espera agotado")

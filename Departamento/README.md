@@ -2,6 +2,7 @@
 
 This directory contains the services and configurations deployed at the hospital department nodes:
 - **Inventory Service (`Inventory_Service`)**: A Go backend service that manages local stock levels, registers inventory movements, validates minimum stock limits, and publishes alerts to RabbitMQ when stocks fall below the safety threshold.
+- **RFID Bridge (`rfid_bridge`)**: A Go communication bridge that reads RFID credentials (UID + PIN) from a physical serial port reader and performs authentication requests against the department backend.
 
 To simplify deployment and integration with the central hospital infrastructure, **a single unified `.env` file is used at the root of `Departamento/`** (`Departamento/.env`) which is loaded by the services in `docker-compose-departamento.yml`.
 
@@ -27,6 +28,13 @@ Used by the Inventory Service to publish alerts to the queue whenever stock drop
 * **`RABBITMQ_URL`**: Full AMQP connection URI pointing to the central RabbitMQ broker (e.g., `amqp://guest:guest@rabbitmq:5672/` or `amqp://guest:guest@localhost:5672/`).
 * **`RABBITMQ_QUEUE`**: The destination queue name where low-stock and movement alerts will be published (e.g., `alert_queue`).
 
+### 4. RFID Bridge Settings
+Used to configure the connection to the physical RFID reader device and the target authentication service:
+* **`RFID_PORT`**: File path to the serial port device where the RFID reader is connected (e.g., `/dev/ttyACM0` or `/dev/ttyUSB0`).
+* **`RFID_BAUD`**: Baud rate for the serial connection (e.g., `9600`).
+* **`RFID_API_URL`**: Endpoint address where RFID authentication requests are processed (e.g., `http://localhost:7050/api/v1/auth/login/rfid`).
+* **`RFID_CONNECT_TIMEOUT`**: Maximum duration allowed to search for and connect to the physical serial port (e.g., `60s` or a number of seconds like `60`).
+
 ---
 
 ## Unified `.env` Template
@@ -47,4 +55,10 @@ DEPARTMENT_ID=1
 # RabbitMQ Settings
 RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
 RABBITMQ_QUEUE=alert_queue
+
+# RFID Bridge Settings
+RFID_PORT=/dev/ttyACM0
+RFID_BAUD=9600
+RFID_API_URL=http://localhost:7050/api/v1/auth/login/rfid
+RFID_CONNECT_TIMEOUT=60s
 ```
