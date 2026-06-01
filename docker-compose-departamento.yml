@@ -14,10 +14,10 @@ services:
     networks:
       - hospital_network
 
-  frontend_nodo:
-    image: frontend_nodo
-    build: ./frontend-nodo
-    container_name: frontend_nodo
+  supplies_registry:
+    image: supplies_registry
+    build: ./Departamento/Supplies_Registry
+    container_name: supplies_registry
     ports:
       - "8010:8010"
     environment:
