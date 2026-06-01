@@ -17,7 +17,7 @@ The following parameters must be specified in the `.env` file for the applicatio
 - `POSTGRES_SERVER`: The host or IP address of the PostgreSQL database. Use `localhost` if running outside of Docker, or the container name (`postgres`) if running inside a Docker network.
 - `POSTGRES_PORT`: The port number on which the PostgreSQL database is listening (e.g., `6000`).
 - `POSTGRES_DB`: The name of the target database (e.g., `gestion_hospitalario`).
-- `RABBITMQ_URL`: The full connection string/URL for the RabbitMQ broker (e.g., `amqp://guest:guest@localhost:5672/`).
+- `RABBITMQ_URL`: The full connection string/URL for the RabbitMQ broker (e.g., `amqp://guest:guest@localhost:7040/`).
 - `RABBITMQ_QUEUE`: The name of the queue to listen to and consume alert messages from (e.g., `alert_queue`).
 
 ### Example `.env` file
@@ -30,7 +30,7 @@ POSTGRES_PASSWORD=postgres
 POSTGRES_SERVER=localhost
 POSTGRES_PORT=6000
 POSTGRES_DB=gestion_hospitalario
-RABBITMQ_URL=amqp://guest:guest@localhost:5672/
+RABBITMQ_URL=amqp://guest:guest@localhost:7040/
 RABBITMQ_QUEUE=alert_queue
 ```
 

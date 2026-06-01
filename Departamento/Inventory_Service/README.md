@@ -65,7 +65,7 @@ El servicio se configura mediante variables de entorno. En desarrollo local se p
 | `POSTGRES_DB` | Nombre de la base de datos | _(requerido)_ |
 | `DEPARTMENT_ID` | ID del departamento al que pertenece esta instancia | `1` |
 | `SERVER_PORT` | Puerto en que escucha el servidor HTTP | `7010` |
-| `RABBITMQ_URL` | URL de conexión a RabbitMQ | `amqp://guest:guest@localhost:5672/` |
+| `RABBITMQ_URL` | URL de conexión a RabbitMQ | `amqp://guest:guest@localhost:7040/` |
 | `RABBITMQ_QUEUE` | Nombre de la cola de alertas | `alert_queue` |
 | `PROJECT_NAME` | Nombre del proyecto | `S.G.H - Inventory Service` |
 

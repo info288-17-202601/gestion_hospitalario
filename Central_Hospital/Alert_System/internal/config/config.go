@@ -35,7 +35,7 @@ func LoadConfig() (*Settings, error) {
 		PostgresServer:   getEnv("POSTGRES_SERVER", "localhost"),
 		PostgresPort:     getEnv("POSTGRES_PORT", "6000"),
 		PostgresDB:       getEnv("POSTGRES_DB", "gestion_hospitalario"),
-		RabbitMQURL:      getEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/"),
+		RabbitMQURL:      getEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:7040/"),
 		RabbitMQQueue:    getEnv("RABBITMQ_QUEUE", "alert_queue"),
 		Port:             getEnv("PORT", "7030"),
 	}, nil

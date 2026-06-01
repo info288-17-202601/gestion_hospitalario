@@ -73,7 +73,7 @@ services:
       - TZ=America/Santiago
       - POSTGRES_SERVER=postgres
       - POSTGRES_PORT=6000
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:7040/
     env_file:
       - ./Central_Hospital/.env
     networks:
@@ -130,10 +130,11 @@ services:
     image: rabbitmq:3-management
     container_name: rabbitmq
     ports:
-      - "5672:5672"
+      - "7040:7040"
       - "15672:15672"
     environment:
       - TZ=America/Santiago
+      - RABBITMQ_NODE_PORT=7040
     networks:
       - hospital_network
     depends_on:

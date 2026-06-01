@@ -25,7 +25,7 @@ Although the PostgreSQL database resides centrally, the department backend needs
 
 ### 3. Messaging Settings (RabbitMQ)
 Used by the Inventory Service to publish alerts to the queue whenever stock drops below the required minimum level:
-* **`RABBITMQ_URL`**: Full AMQP connection URI pointing to the central RabbitMQ broker (e.g., `amqp://guest:guest@rabbitmq:5672/` or `amqp://guest:guest@localhost:5672/`).
+* **`RABBITMQ_URL`**: Full AMQP connection URI pointing to the central RabbitMQ broker (e.g., `amqp://guest:guest@rabbitmq:7040/` or `amqp://guest:guest@localhost:7040/`).
 * **`RABBITMQ_QUEUE`**: The destination queue name where low-stock and movement alerts will be published (e.g., `alert_queue`).
 
 ### 4. RFID Bridge Settings
@@ -53,7 +53,7 @@ POSTGRES_PORT=6000
 DEPARTMENT_ID=1
 
 # RabbitMQ Settings
-RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+RABBITMQ_URL=amqp://guest:guest@rabbitmq:7040/
 RABBITMQ_QUEUE=alert_queue
 
 # RFID Bridge Settings

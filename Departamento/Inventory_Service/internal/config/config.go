@@ -34,7 +34,7 @@ func LoadConfig() (*Settings, error) {
         PostgresPort:     os.Getenv("POSTGRES_PORT"),
         PostgresDB:       os.Getenv("POSTGRES_DB"),
         DepartmentID:     parseUint(os.Getenv("DEPARTMENT_ID"), 1),
-        RabbitMQURL:      getEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:5672/"),
+        RabbitMQURL:      getEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:7040/"),
         RabbitMQQueue:    getEnv("RABBITMQ_QUEUE", "alert_queue"),
     }, nil
 }

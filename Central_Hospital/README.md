@@ -27,7 +27,7 @@ These variables configure the PostgreSQL connection and are shared by all backen
 
 ### 3. Messaging Settings (RabbitMQ)
 Used by the Alert System to connect to the RabbitMQ message broker:
-* **`RABBITMQ_URL`**: Full AMQP connection URI (e.g., `amqp://guest:guest@rabbitmq:5672/` or `amqp://guest:guest@localhost:5672/`).
+* **`RABBITMQ_URL`**: Full AMQP connection URI (e.g., `amqp://guest:guest@rabbitmq:7040/` or `amqp://guest:guest@localhost:7040/`).
 * **`RABBITMQ_QUEUE`**: The queue name where low-stock notifications are consumed (e.g., `alert_queue`).
 
 ### 4. Alert & Reporting Service Settings
@@ -54,6 +54,6 @@ JWT_SECRET=super_secret_hospital_key
 # Alert System Settings
 PROJECT_NAME="Central Hospital - Alert Service"
 PORT=7030
-RABBITMQ_URL=amqp://guest:guest@rabbitmq:5672/
+RABBITMQ_URL=amqp://guest:guest@rabbitmq:7040/
 RABBITMQ_QUEUE=alert_queue
 ```
