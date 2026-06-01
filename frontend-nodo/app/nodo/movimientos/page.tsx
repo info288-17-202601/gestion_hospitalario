@@ -7,18 +7,11 @@ import { getInventoryMovements, getSupplies } from '@/lib/services'
 import type { InventoryMovement, Supply } from '@/lib/types'
 
 export default function NodeMovimientosPage() {
-  const [deptId, setDeptId] = useState(1)
-  const [dept, setDept] = useState(departments[0])
   const [filterType, setFilterType] = useState<string>('all')
   const [movements, setMovements] = useState<InventoryMovement[]>([])
   const [supplies, setSupplies] = useState<Supply[]>([])
 
   useEffect(() => {
-    const storedDeptId = parseInt(sessionStorage.getItem('sghd_nodo_department') || '1', 10)
-    setDeptId(storedDeptId)
-    const found = departments.find(d => d.id === storedDeptId)
-    if (found) setDept(found)
-
     getInventoryMovements()
       .then(setMovements)
       .catch((error) => {
@@ -32,24 +25,19 @@ export default function NodeMovimientosPage() {
       })
   }, [])
 
-  const localMovements = movements.filter(
-    (m) => m.source_department_id === deptId || m.destination_department_id === deptId
-  )
-
   const filteredMovements = filterType === 'all'
-    ? localMovements
-    : localMovements.filter((m) => m.type === filterType)
+    ? movements
+    : movements.filter((m) => m.type === filterType)
 
   return (
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold text-foreground">Movimientos Locales</h1>
         <p className="text-sm text-muted-foreground mt-1">
-          Historial de movimientos del departamento de {dept.name}
+          Historial de movimientos del departamento actual
         </p>
       </div>
 
-      {/* Filters */}
       <div className="flex flex-wrap gap-2">
         {['all', 'entrada', 'salida', 'transferencia'].map((t) => (
           <button
@@ -66,7 +54,6 @@ export default function NodeMovimientosPage() {
         ))}
       </div>
 
-      {/* Table */}
       <div className="rounded-xl border border-border bg-card overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
@@ -81,6 +68,7 @@ export default function NodeMovimientosPage() {
                 <th className="px-5 py-3 font-medium text-muted-foreground">Usuario</th>
               </tr>
             </thead>
+
             <tbody>
               {filteredMovements.length === 0 ? (
                 <tr>
@@ -94,24 +82,33 @@ export default function NodeMovimientosPage() {
                   const user = users.find((u) => u.id === mov.user_id)
                   const srcDept = departments.find((d) => d.id === mov.source_department_id)
                   const dstDept = departments.find((d) => d.id === mov.destination_department_id)
+
                   return (
                     <tr key={mov.id} className="border-b border-border last:border-0 hover:bg-muted/20">
                       <td className="px-5 py-3 text-muted-foreground">
                         {new Date(mov.created_at).toLocaleDateString('es-CL')}
                       </td>
+
                       <td className="px-5 py-3">
                         <StatusBadge variant={mov.type as 'entrada' | 'salida' | 'transferencia' | 'ajuste'} />
                       </td>
+
                       <td className="px-5 py-3 font-medium text-foreground">
                         {supply?.name || 'N/A'}
                       </td>
-                      <td className="px-5 py-3 text-foreground">{mov.quantity}</td>
+
+                      <td className="px-5 py-3 text-foreground">
+                        {mov.quantity}
+                      </td>
+
                       <td className="px-5 py-3 text-muted-foreground">
                         {srcDept?.name || '-'}
                       </td>
+
                       <td className="px-5 py-3 text-muted-foreground">
                         {dstDept?.name || '-'}
                       </td>
+
                       <td className="px-5 py-3 text-muted-foreground">
                         {user ? `${user.first_name} ${user.last_name}` : 'N/A'}
                       </td>
