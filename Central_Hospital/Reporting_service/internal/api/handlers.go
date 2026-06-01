@@ -9,6 +9,7 @@ import (
 	"reporting_service/internal/models"
 	"reporting_service/internal/services"
 
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
@@ -25,6 +26,14 @@ func SetConfig(cfg *config.Config) {
 func SetupRouter() *gin.Engine {
 	r := gin.Default()
 
+	// CORS config
+	config := cors.DefaultConfig()
+	config.AllowAllOrigins = true
+	config.AllowMethods = []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"}
+	config.AllowHeaders = []string{"*"}
+	config.ExposeHeaders = []string{"*"}
+	r.Use(cors.New(config))
+
 	// Swagger documentation route
 	r.GET("/docs/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
@@ -34,6 +43,10 @@ func SetupRouter() *gin.Engine {
 		api.GET("/monthly-consumption", getMonthlyConsumption)
 		api.GET("/traceability", getTraceability)
 		api.GET("/active-alerts", getActiveAlerts)
+		api.GET("/inventory", getDepartmentInventory)
+		api.GET("/departments", getDepartments)
+		api.GET("/supplies", getSupplies)
+		api.GET("/categories", getCategories)
 	}
 
 	return r
@@ -152,4 +165,68 @@ func getActiveAlerts(c *gin.Context) {
 		return
 	}
 	c.JSON(http.StatusOK, reports)
+}
+
+// @Summary Get full department inventory report
+// @Description Returns the full inventory of all departments
+// @Tags reports
+// @Produce json
+// @Success 200 {array} models.DepartmentInventoryReport
+// @Failure 500 {object} map[string]string
+// @Router /reports/inventory [get]
+func getDepartmentInventory(c *gin.Context) {
+	reports, err := services.GetDepartmentInventoryReport()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener inventario", "details": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, reports)
+}
+
+// @Summary Get all departments
+// @Description Returns all departments
+// @Tags reports
+// @Produce json
+// @Success 200 {array} models.Department
+// @Failure 500 {object} map[string]string
+// @Router /reports/departments [get]
+func getDepartments(c *gin.Context) {
+	depts, err := services.GetDepartments()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener departamentos", "details": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, depts)
+}
+
+// @Summary Get all supplies
+// @Description Returns all supplies
+// @Tags reports
+// @Produce json
+// @Success 200 {array} models.Supply
+// @Failure 500 {object} map[string]string
+// @Router /reports/supplies [get]
+func getSupplies(c *gin.Context) {
+	sups, err := services.GetSupplies()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener insumos", "details": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, sups)
+}
+
+// @Summary Get all categories
+// @Description Returns all supply categories
+// @Tags reports
+// @Produce json
+// @Success 200 {array} models.Category
+// @Failure 500 {object} map[string]string
+// @Router /reports/categories [get]
+func getCategories(c *gin.Context) {
+	cats, err := services.GetCategories()
+	if err != nil {
+		c.JSON(http.StatusInternalServerError, gin.H{"error": "Error al obtener categorias", "details": err.Error()})
+		return
+	}
+	c.JSON(http.StatusOK, cats)
 }

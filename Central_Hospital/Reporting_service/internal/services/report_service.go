@@ -88,3 +88,38 @@ func GetActiveAlertsReport(departmentID int) ([]models.ActiveAlertReport, error)
 	err := db.DB.Raw(query, departmentID).Scan(&reports).Error
 	return reports, err
 }
+
+// GetDepartmentInventoryReport recupera el inventario completo
+func GetDepartmentInventoryReport() ([]models.DepartmentInventoryReport, error) {
+	var reports []models.DepartmentInventoryReport
+	query := `
+		SELECT 
+			di.id,
+			di.department_id,
+			di.supply_id,
+			di.quantity,
+			s.minimum_stock
+		FROM department_inventory di
+		JOIN supplies s ON di.supply_id = s.id;
+	`
+	err := db.DB.Raw(query).Scan(&reports).Error
+	return reports, err
+}
+
+func GetDepartments() ([]models.Department, error) {
+	var departments []models.Department
+	err := db.DB.Raw("SELECT id, name, location, is_active FROM departments").Scan(&departments).Error
+	return departments, err
+}
+
+func GetSupplies() ([]models.Supply, error) {
+	var supplies []models.Supply
+	err := db.DB.Raw("SELECT id, internal_code, name, description, unit_of_measure, minimum_stock, category_id, is_active FROM supplies").Scan(&supplies).Error
+	return supplies, err
+}
+
+func GetCategories() ([]models.Category, error) {
+	var categories []models.Category
+	err := db.DB.Raw("SELECT id, name, description FROM supply_category").Scan(&categories).Error
+	return categories, err
+}

@@ -36,3 +36,36 @@ type ActiveAlertReport struct {
 	Message    string    `json:"message"`
 	CreatedAt  time.Time `json:"created_at"`
 }
+
+// DepartmentInventoryReport representa el inventario de un departamento
+type DepartmentInventoryReport struct {
+	ID           int     `json:"id"`
+	DepartmentID int     `json:"department_id"`
+	SupplyID     int     `json:"supply_id"`
+	Quantity     float64 `json:"quantity"`
+	MinimumStock float64 `json:"minimum_stock"`
+}
+
+type Department struct {
+	ID       int    `json:"id"`
+	Name     string `json:"name"`
+	Location string `json:"location"`
+	IsActive bool   `json:"is_active"`
+}
+
+type Supply struct {
+	ID            int     `json:"id"`
+	InternalCode  string  `json:"internal_code"`
+	Name          string  `json:"name"`
+	Description   string  `json:"description"`
+	UnitOfMeasure string  `json:"unit_of_measure"`
+	MinimumStock  float64 `json:"minimum_stock"`
+	CategoryID    int     `json:"category_id"`
+	IsActive      bool    `json:"is_active"`
+}
+
+type Category struct {
+	ID          int    `json:"id"`
+	Name        string `json:"name"`
+	Description string `json:"description"`
+}
