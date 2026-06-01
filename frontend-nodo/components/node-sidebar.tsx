@@ -17,7 +17,6 @@ const navItems = [
   { href: '/nodo/inventario',         label: 'Mi Inventario',       icon: Package },
   { href: '/nodo/registrar-movimiento', label: 'Registrar Movimiento', icon: PlusCircle },
   { href: '/nodo/movimientos',        label: 'Movimientos Locales', icon: ArrowLeftRight },
-  { href: '/nodo/alertas',            label: 'Alertas Locales',     icon: Bell },
 ]
 
 interface NodeSidebarProps {
