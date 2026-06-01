@@ -48,6 +48,7 @@ services:
       - "7030:7030"
     environment:
       - TZ=America/Santiago
+      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:7040/
     env_file:
       - ./Central_Hospital/.env
     networks:

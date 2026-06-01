@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { CheckCheck, Eye } from 'lucide-react'
 import { StatusBadge } from '@/components/status-badge'
 import { getDepartments, getSupplies } from '@/lib/services'
+import { toast } from '@/hooks/use-toast'
 import type { Alert, AlertStatus, Department, Supply } from '@/lib/types'
 
 const alertTypeLabels: Record<string, string> = {
@@ -57,6 +58,41 @@ export default function AlertasPage() {
       setDepartments(dp)
       setSupplies(sp)
     })
+
+    const ws = new WebSocket('ws://localhost:7030/api/v1/alert/ws')
+
+    ws.onmessage = (event) => {
+      try {
+        const newAlert = JSON.parse(event.data)
+        const mappedAlert = {
+          ...newAlert,
+          status: mapStatusToFrontend(newAlert.status || 'PENDING')
+        }
+
+        toast({
+          title: 'Alerta del Sistema',
+          description: mappedAlert.message,
+        })
+
+        setAlerts((prev) => {
+          const index = prev.findIndex(a => a.id === mappedAlert.id);
+          if (index >= 0) {
+            const copy = [...prev];
+            copy[index] = mappedAlert;
+            // Opcional: mover al inicio de la lista
+            const [updatedItem] = copy.splice(index, 1);
+            return [updatedItem, ...copy];
+          }
+          return [mappedAlert, ...prev];
+        })
+      } catch (err) {
+        console.error('Error parsing WS message:', err)
+      }
+    }
+
+    return () => {
+      ws.close()
+    }
   }, [])
 
   const getSupplyName = (id: number | null) => id ? supplies.find((s) => s.id === id)?.name ?? '-' : '-'

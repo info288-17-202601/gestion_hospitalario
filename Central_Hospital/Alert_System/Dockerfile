@@ -24,7 +24,7 @@ WORKDIR /root/
 
 COPY --from=builder /app/alert_service .
 
-ENV GIN_MODE=release
+#ENV GIN_MODE=release
 
 EXPOSE 7030
 
