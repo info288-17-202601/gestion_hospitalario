@@ -40,29 +40,6 @@ services:
         condition: service_healthy
     restart: unless-stopped
 
-  inventory:
-    image: inventory_service
-    build: ./Departamento/Inventory_Service
-    container_name: inventory_service
-    ports:
-      - "7010:7010"
-    environment:
-      - TZ=America/Santiago
-      - POSTGRES_SERVER=postgres
-      - POSTGRES_PORT=6000
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_SERVER=postgres
-      - POSTGRES_DB=gestion_hospitalario
-      - DEPARTMENT_ID=1
-      - SERVER_PORT=7010
-    networks:
-      - hospital_network
-    depends_on:
-      postgres:
-        condition: service_healthy
-    restart: unless-stopped
-
   alert_system:
     image: alert_system
     build: ./Central_Hospital/Alert_System
@@ -71,9 +48,6 @@ services:
       - "7030:7030"
     environment:
       - TZ=America/Santiago
-      - POSTGRES_SERVER=postgres
-      - POSTGRES_PORT=6000
-      - RABBITMQ_URL=amqp://guest:guest@rabbitmq:7040/
     env_file:
       - ./Central_Hospital/.env
     networks:
@@ -84,6 +58,7 @@ services:
       rabbitmq:
         condition: service_started
     restart: unless-stopped
+
   reporting_service:
     image: reporting_service
     build: ./Central_Hospital/Reporting_service
@@ -92,8 +67,6 @@ services:
       - "7020:7020"
     environment:
       - TZ=America/Santiago
-      - POSTGRES_SERVER=postgres
-      - POSTGRES_PORT=6000
     env_file:
       - ./Central_Hospital/.env
     networks:
