@@ -69,3 +69,85 @@ type Category struct {
 	Name        string `json:"name"`
 	Description string `json:"description"`
 }
+
+type User struct {
+	ID           int    `json:"id"`
+	Rut          string `json:"rut"`
+	FirstName    string `json:"first_name" gorm:"column:name"`
+	LastName     string `json:"last_name" gorm:"column:last_name"`
+	Email        string `json:"email"`
+	Phone        string `json:"phone"`
+	Role         string `json:"role"`
+	DepartmentID int    `json:"department_id"`
+	IsActive     bool   `json:"is_active"`
+}
+
+type CreateUserRequest struct {
+	Rut          string `json:"rut"`
+	FirstName    string `json:"first_name"`
+	LastName     string `json:"last_name"`
+	Email        string `json:"email"`
+	Phone        string `json:"phone"`
+	Role         string `json:"role"`
+	DepartmentID int    `json:"department_id"`
+	IsActive     bool   `json:"is_active"`
+	Password     string `json:"password"`
+}
+
+type UpdateUserRequest struct {
+	Rut          string `json:"rut"`
+	FirstName    string `json:"first_name"`
+	LastName     string `json:"last_name"`
+	Email        string `json:"email"`
+	Phone        string `json:"phone"`
+	Role         string `json:"role"`
+	DepartmentID int    `json:"department_id"`
+	IsActive     bool   `json:"is_active"`
+}
+
+type RfidCard struct {
+	ID        int       `json:"id"`
+	UserID    int       `json:"user_id"`
+	UID       string    `json:"uid"`
+	IsActive  bool      `json:"is_active"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type InventoryMovement struct {
+	ID                      int       `json:"id"`
+	Type                    string    `json:"type"`
+	Quantity                float64   `json:"quantity"`
+	CreatedAt               time.Time `json:"created_at" gorm:"column:movement_date"`
+	Observations            string    `json:"observations"`
+	UserID                  int       `json:"user_id"`
+	SupplyID                int       `json:"supply_id"`
+	SourceDepartmentID      *int      `json:"source_department_id" gorm:"column:origin_department_id"`
+	DestinationDepartmentID *int      `json:"destination_department_id" gorm:"column:destination_department_id"`
+}
+
+type AuthLog struct {
+	ID        int       `json:"id"`
+	UserID    *int      `json:"user_id"`
+	Method    string    `json:"method"`
+	UIDUsed   *string   `json:"uid_used"`
+	Result    string    `json:"result"`
+	Reason    *string   `json:"reason"`
+	CreatedAt time.Time `json:"created_at"`
+}
+
+type UserPinCredential struct {
+	ID           int    `json:"id"`
+	UserID       int    `json:"user_id"`
+	PinHash      string `json:"pin_hash"`
+	IsConfigured bool   `json:"is_configured"`
+}
+
+type CreateMovementRequest struct {
+	Type                    string  `json:"type"`
+	Quantity                float64 `json:"quantity"`
+	UserID                  int     `json:"user_id"`
+	SupplyID                int     `json:"supply_id"`
+	SourceDepartmentID      *int    `json:"source_department_id"`
+	DestinationDepartmentID *int    `json:"destination_department_id"`
+	Observations            string  `json:"observations"`
+}

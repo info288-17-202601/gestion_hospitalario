@@ -18,15 +18,13 @@ import {
 import { cn } from '@/lib/utils'
 
 const navItems = [
-  { href: '/dashboard',    label: 'Dashboard',      icon: LayoutDashboard },
-  { href: '/inventario',   label: 'Inventario',     icon: Package },
-  { href: '/movimientos',  label: 'Movimientos',    icon: ArrowLeftRight },
-  { href: '/alertas',      label: 'Alertas',        icon: Bell },
-  { href: '/insumos',      label: 'Insumos',        icon: Syringe },
-  { href: '/categorias',   label: 'Categorías',     icon: Tag },
-  { href: '/departamentos',label: 'Departamentos',  icon: Building2 },
-  { href: '/usuarios',     label: 'Usuarios',       icon: Users },
-  { href: '/logs-acceso',  label: 'Logs de Acceso', icon: FileText },
+  { href: '/inventario', label: 'Inventario', icon: Package },
+  { href: '/movimientos', label: 'Movimientos', icon: ArrowLeftRight },
+  { href: '/alertas', label: 'Alertas', icon: Bell },
+  { href: '/insumos', label: 'Insumos', icon: Syringe },
+  { href: '/categorias', label: 'Categorías', icon: Tag },
+  { href: '/usuarios', label: 'Usuarios', icon: Users },
+  { href: '/logs-acceso', label: 'Logs de Acceso', icon: FileText },
 ]
 
 interface SidebarProps {

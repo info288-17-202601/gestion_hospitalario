@@ -2,7 +2,6 @@
 
 import { useEffect, useState, useMemo } from 'react'
 import { StatusBadge } from '@/components/status-badge'
-import { getAuthLogs, getUsers } from '@/lib/services'
 import type { AuthLog, AuthMethod, AuthResult, User } from '@/lib/types'
 
 export default function LogsAccesoPage() {
@@ -13,10 +12,13 @@ export default function LogsAccesoPage() {
   const [resultFilter, setResultFilter] = useState<AuthResult | ''>('')
 
   useEffect(() => {
-    Promise.all([getAuthLogs(), getUsers()]).then(([lg, us]) => {
-      setLogs(lg)
-      setUsers(us)
-    })
+    Promise.all([
+      fetch('http://localhost:7020/api/reports/auth-logs').then(r => r.json()),
+      fetch('http://localhost:7020/api/reports/users').then(r => r.json())
+    ]).then(([lg, us]) => {
+      setLogs(lg || [])
+      setUsers(us || [])
+    }).catch(console.error)
   }, [])
 
   const getUserName = (id: number | null) => {
