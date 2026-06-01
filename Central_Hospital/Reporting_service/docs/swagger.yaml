@@ -11,6 +11,15 @@ definitions:
       type:
         type: string
     type: object
+  models.Category:
+    properties:
+      description:
+        type: string
+      id:
+        type: integer
+      name:
+        type: string
+    type: object
   models.CriticalStockReport:
     properties:
       current_stock:
@@ -24,6 +33,51 @@ definitions:
       supply_name:
         type: string
     type: object
+  models.Department:
+    properties:
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      location:
+        type: string
+      name:
+        type: string
+    type: object
+  models.DepartmentInventoryReport:
+    properties:
+      department_id:
+        type: integer
+      id:
+        type: integer
+      minimum_stock:
+        type: number
+      quantity:
+        type: number
+      supply_id:
+        type: integer
+    type: object
+  models.InventoryMovement:
+    properties:
+      created_at:
+        type: string
+      destination_department_id:
+        type: integer
+      id:
+        type: integer
+      observations:
+        type: string
+      quantity:
+        type: number
+      source_department_id:
+        type: integer
+      supply_id:
+        type: integer
+      type:
+        type: string
+      user_id:
+        type: integer
+    type: object
   models.MonthlyConsumptionReport:
     properties:
       internal_code:
@@ -32,6 +86,25 @@ definitions:
         type: string
       total_consumed:
         type: number
+    type: object
+  models.Supply:
+    properties:
+      category_id:
+        type: integer
+      description:
+        type: string
+      id:
+        type: integer
+      internal_code:
+        type: string
+      is_active:
+        type: boolean
+      minimum_stock:
+        type: number
+      name:
+        type: string
+      unit_of_measure:
+        type: string
     type: object
   models.TraceabilityReport:
     properties:
@@ -48,6 +121,27 @@ definitions:
       responsable:
         type: string
       type:
+        type: string
+    type: object
+  models.User:
+    properties:
+      department_id:
+        type: integer
+      email:
+        type: string
+      first_name:
+        type: string
+      id:
+        type: integer
+      is_active:
+        type: boolean
+      last_name:
+        type: string
+      phone:
+        type: string
+      role:
+        type: string
+      rut:
         type: string
     type: object
 host: localhost:7020
@@ -90,6 +184,27 @@ paths:
       summary: Get active alerts report
       tags:
       - reports
+  /reports/categories:
+    get:
+      description: Returns all supply categories
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Category'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all categories
+      tags:
+      - reports
   /reports/critical-stock:
     get:
       description: Returns supplies with quantity <= minimum stock for the specified
@@ -124,6 +239,48 @@ paths:
       summary: Get critical stock report
       tags:
       - reports
+  /reports/departments:
+    get:
+      description: Returns all departments
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Department'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all departments
+      tags:
+      - reports
+  /reports/inventory:
+    get:
+      description: Returns the full inventory of all departments
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.DepartmentInventoryReport'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get full department inventory report
+      tags:
+      - reports
   /reports/monthly-consumption:
     get:
       description: Returns the total quantity of consumed supplies in the last 30
@@ -156,6 +313,127 @@ paths:
               type: string
             type: object
       summary: Get monthly consumption report
+      tags:
+      - reports
+  /reports/movements:
+    get:
+      description: Returns all inventory movements
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.InventoryMovement'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all movements
+      tags:
+      - reports
+    post:
+      consumes:
+      - application/json
+      description: Create a new inventory movement
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.InventoryMovement'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create movement
+      tags:
+      - reports
+  /reports/supplies:
+    get:
+      description: Returns all supplies
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.Supply'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all supplies
+      tags:
+      - reports
+    post:
+      consumes:
+      - application/json
+      description: Create a new supply
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Supply'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Create supply
+      tags:
+      - reports
+  /reports/supplies/{id}:
+    put:
+      consumes:
+      - application/json
+      description: Update an existing supply
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            $ref: '#/definitions/models.Supply'
+        "400":
+          description: Bad Request
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Update supply
       tags:
       - reports
   /reports/traceability:
@@ -195,6 +473,27 @@ paths:
               type: string
             type: object
       summary: Get traceability report for a supply
+      tags:
+      - reports
+  /reports/users:
+    get:
+      description: Returns all users
+      produces:
+      - application/json
+      responses:
+        "200":
+          description: OK
+          schema:
+            items:
+              $ref: '#/definitions/models.User'
+            type: array
+        "500":
+          description: Internal Server Error
+          schema:
+            additionalProperties:
+              type: string
+            type: object
+      summary: Get all users
       tags:
       - reports
 swagger: "2.0"

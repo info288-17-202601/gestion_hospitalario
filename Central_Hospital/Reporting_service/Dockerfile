@@ -7,6 +7,8 @@ RUN go mod download
 
 COPY . .
 
+# ENV GIN_MODE=release
+
 RUN go build -o reporting_service_bin ./cmd/server/main.go
 
 EXPOSE 7030

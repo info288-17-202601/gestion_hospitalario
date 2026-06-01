@@ -87,10 +87,10 @@ services:
     networks:
       - hospital_network
 
-  frontend_central:
-    image: frontend_central
-    build: ./frontend-central
-    container_name: frontend_central
+  traceability:
+    image: traceability
+    build: ./Central_Hospital/Traceability
+    container_name: traceability
     ports:
       - "8020:8020"
     environment:
