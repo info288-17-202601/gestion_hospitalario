@@ -3,7 +3,7 @@
 import { useEffect, useState } from 'react'
 import { CheckCheck, Eye } from 'lucide-react'
 import { StatusBadge } from '@/components/status-badge'
-import { getAlerts, updateAlertStatus, getDepartments, getSupplies } from '@/lib/services'
+import { getDepartments, getSupplies } from '@/lib/services'
 import type { Alert, AlertStatus, Department, Supply } from '@/lib/types'
 
 const alertTypeLabels: Record<string, string> = {
@@ -18,8 +18,41 @@ export default function AlertasPage() {
   const [departments, setDepartments] = useState<Department[]>([])
   const [supplies, setSupplies] = useState<Supply[]>([])
 
+  const mapStatusToFrontend = (status: string): AlertStatus => {
+    switch (status) {
+      case 'PENDING': return 'pendiente'
+      case 'REVIEWED': return 'revisada'
+      case 'RESOLVED': return 'resuelta'
+      default: return 'pendiente'
+    }
+  }
+
+  const mapStatusToBackend = (status: AlertStatus): string => {
+    switch (status) {
+      case 'pendiente': return 'PENDING'
+      case 'revisada': return 'REVIEWED'
+      case 'resuelta': return 'RESOLVED'
+    }
+  }
+
   useEffect(() => {
-    Promise.all([getAlerts(), getDepartments(), getSupplies()]).then(([al, dp, sp]) => {
+    const fetchAlerts = async () => {
+      try {
+        const res = await fetch('http://localhost:7030/api/v1/alert')
+        if (!res.ok) throw new Error('Error fetching alerts')
+        const data = await res.json()
+        const mappedAlerts = data.map((d: any) => ({
+          ...d,
+          status: mapStatusToFrontend(d.status)
+        }))
+        return mappedAlerts
+      } catch (error) {
+        console.error(error)
+        return []
+      }
+    }
+
+    Promise.all([fetchAlerts(), getDepartments(), getSupplies()]).then(([al, dp, sp]) => {
       setAlerts(al)
       setDepartments(dp)
       setSupplies(sp)
@@ -32,8 +65,24 @@ export default function AlertasPage() {
     new Date(iso).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 
   const handleUpdateStatus = async (id: number, status: AlertStatus) => {
-    const updated = await updateAlertStatus(id, status)
-    setAlerts((prev) => prev.map((a) => (a.id === id ? updated : a)))
+    try {
+      const backendStatus = mapStatusToBackend(status)
+      const res = await fetch(`http://localhost:7030/api/v1/alert/${id}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status: backendStatus })
+      })
+      if (!res.ok) throw new Error('Failed to update alert')
+      const updatedBackend = await res.json()
+      
+      const updated: Alert = {
+        ...updatedBackend,
+        status: mapStatusToFrontend(updatedBackend.status)
+      }
+      setAlerts((prev) => prev.map((a) => (a.id === id ? updated : a)))
+    } catch (error) {
+      console.error('Error updating status:', error)
+    }
   }
 
   const pending = alerts.filter((a) => a.status === 'pendiente').length
