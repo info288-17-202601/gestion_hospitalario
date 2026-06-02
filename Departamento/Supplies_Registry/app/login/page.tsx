@@ -4,7 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { Hospital, CreditCard, Lock, User, AlertCircle, CheckCircle } from 'lucide-react'
 import { loginWithPassword } from '@/lib/services'
-import { runRfidBridge } from "../../components/ui/rfid-actions"
+import { runRfidBridge } from '../../components/ui/rfid-actions'
 
 type Tab = 'password' | 'rfid'
 type MessageType = 'error' | 'success' | null
@@ -13,23 +13,32 @@ export default function LoginPage() {
   const router = useRouter()
   const [tab, setTab] = useState<Tab>('password')
 
-  // Password form
   const [rut, setRut] = useState('')
   const [password, setPassword] = useState('')
-
-  // RFID form
 
   const [message, setMessage] = useState<{ type: MessageType; text: string } | null>(null)
   const [loading, setLoading] = useState(false)
   const [retryRfid, setRetryRfid] = useState(false)
 
+  const shouldRetryRfid = (text: string) => {
+    return (
+      text.includes('lector RFID/NFC no está conectado') ||
+      text.includes('no se pudo leer') ||
+      text.includes('No se pudo ejecutar el lector') ||
+      text.includes('Tiempo agotado') ||
+      text.includes('No se detectó') ||
+      text.includes('permisos del puerto')
+    )
+  }
+
   const handleRfidLogin = async (e?: React.FormEvent) => {
     e?.preventDefault()
+
     setLoading(true)
     setRetryRfid(false)
     setMessage({
       type: 'success',
-      text: 'Esperando conexion con el lector',
+      text: 'Acerque su tarjeta al lector e ingrese su contraseña.',
     })
 
     try {
@@ -53,97 +62,131 @@ export default function LoginPage() {
             }
 
         sessionStorage.setItem('sghd_user', JSON.stringify(sessionUser))
-        setMessage({ type: 'success', text: 'Acceso exitoso. Redirigiendo...' })
 
-        router.push('/nodo/inventario')
-      } else {
-        const text = result.message || 'No se pudo iniciar sesión con la tarjeta.'
-        setMessage({ type: 'error', text })
-        if (
-          text.includes('No se pudo establecer conexion') ||
-          text.includes('No esta conectado') ||
-          text.includes('esperando conexion') ||
-          text.includes('tiempo de espera agotado') ||
-          text.includes('RFID_CONNECTION_TIMEOUT')
-        ) {
-          setRetryRfid(true)
+        if (result.token) {
+          sessionStorage.setItem('sghd_token', result.token)
         }
+
+        setMessage({
+          type: 'success',
+          text: 'Acceso exitoso. Redirigiendo...',
+        })
+
+        setTimeout(() => {
+          router.push('/nodo/inventario')
+        }, 700)
+
+        return
       }
+
+      const text = result.message || 'No se pudo iniciar sesión con la tarjeta RFID/NFC.'
+
+      setMessage({
+        type: 'error',
+        text,
+      })
+
+      setRetryRfid(shouldRetryRfid(text))
     } catch (error) {
       setMessage({
         type: 'error',
-        text: 'Error al conectar con el lector RFID/NFC.',
+        text: 'Autenticación con RFID no disponible en estos momentos.',
       })
+
       setRetryRfid(true)
       console.error(error)
     } finally {
       setLoading(false)
     }
   }
+
   const handlePasswordLogin = async (e: React.FormEvent) => {
     e.preventDefault()
+
     setLoading(true)
     setMessage(null)
+    setRetryRfid(false)
+
     const result = await loginWithPassword(rut.trim(), password)
+
     setLoading(false)
+
     if (result.success && result.user) {
-      setMessage({ type: 'success', text: 'Acceso exitoso. Redirigiendo...' })
+      setMessage({
+        type: 'success',
+        text: 'Acceso exitoso. Redirigiendo...',
+      })
+
       sessionStorage.setItem('sghd_user', JSON.stringify(result.user))
-      setTimeout(() => router.push('/nodo/inventario'), 800)
+
+      setTimeout(() => {
+        router.push('/nodo/inventario')
+      }, 800)
     } else {
-      setMessage({ type: 'error', text: result.reason ?? 'Credenciales inválidas' })
+      setMessage({
+        type: 'error',
+        text: result.reason ?? 'Credenciales inválidas',
+      })
     }
   }
-
-  
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="w-full max-w-md">
-        {/* Header */}
         <div className="mb-8 text-center">
           <div className="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-primary shadow-md">
             <Hospital className="h-7 w-7 text-white" />
           </div>
+
           <h1 className="text-2xl font-bold text-foreground text-balance">
             Sistema de Gestión Hospitalario
           </h1>
-          <p className="mt-1 text-sm text-muted-foreground">Distribuido &mdash; Proyecto Semestral</p>
+
+          <p className="mt-1 text-sm text-muted-foreground">
+            Distribuido &mdash; Proyecto Semestral
+          </p>
         </div>
 
-        {/* Card */}
-          <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
-            {/* Tabs */}
-            <div className="flex border-b border-border">
-              <button
-                type="button"
-                onClick={() => { setTab('password'); setMessage(null) }}
-                className={`flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-medium transition-colors ${
-                  tab === 'password'
-                    ? 'border-b-2 border-primary text-primary bg-primary/5'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                }`}
-              >
-                <User className="h-4 w-4" />
-                Acceso Tradicional
-              </button>
+        <div className="rounded-xl border border-border bg-card shadow-sm overflow-hidden">
+          <div className="flex border-b border-border">
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => {
+                setTab('password')
+                setMessage(null)
+                setRetryRfid(false)
+              }}
+              className={`flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-medium transition-colors disabled:opacity-60 ${
+                tab === 'password'
+                  ? 'border-b-2 border-primary text-primary bg-primary/5'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+              }`}
+            >
+              <User className="h-4 w-4" />
+              Acceso Tradicional
+            </button>
 
-              <button
-                type="button"
-                onClick={() => { setTab('rfid'); setMessage(null) }}
-                className={`flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-medium transition-colors ${
-                  tab === 'rfid'
-                    ? 'border-b-2 border-primary text-primary bg-primary/5'
-                    : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-                }`}
-              >
-                <CreditCard className="h-4 w-4" />
-                RFID / NFC
-              </button>
-            </div>
+            <button
+              type="button"
+              disabled={loading}
+              onClick={() => {
+                setTab('rfid')
+                setMessage(null)
+                setRetryRfid(false)
+              }}
+              className={`flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-medium transition-colors disabled:opacity-60 ${
+                tab === 'rfid'
+                  ? 'border-b-2 border-primary text-primary bg-primary/5'
+                  : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
+              }`}
+            >
+              <CreditCard className="h-4 w-4" />
+              RFID / NFC
+            </button>
+          </div>
 
-            <div className="p-6">
-            {/* Message */}
+          <div className="p-6">
             {message && (
               <div
                 className={`mb-5 flex items-center gap-2.5 rounded-lg border px-4 py-3 text-sm ${
@@ -168,6 +211,7 @@ export default function LoginPage() {
                   <label htmlFor="rut" className="mb-1.5 block text-sm font-medium text-foreground">
                     RUT
                   </label>
+
                   <div className="relative">
                     <User className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <input
@@ -182,10 +226,12 @@ export default function LoginPage() {
                     />
                   </div>
                 </div>
+
                 <div>
                   <label htmlFor="password" className="mb-1.5 block text-sm font-medium text-foreground">
                     Contraseña
                   </label>
+
                   <div className="relative">
                     <Lock className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
                     <input
@@ -200,6 +246,7 @@ export default function LoginPage() {
                     />
                   </div>
                 </div>
+
                 <button
                   type="submit"
                   disabled={loading}
@@ -207,19 +254,23 @@ export default function LoginPage() {
                 >
                   {loading ? 'Verificando...' : 'Ingresar'}
                 </button>
+
                 <p className="text-center text-xs text-muted-foreground">
-                  Demo: RUT <span className="font-mono">12.345.678-9</span> / contraseña <span className="font-mono">1234</span>
+                  Demo: RUT <span className="font-mono">12.345.678-9</span> / contraseña{' '}
+                  <span className="font-mono">1234</span>
                 </p>
               </form>
             ) : (
               <form onSubmit={handleRfidLogin} className="flex flex-col gap-4">
                 <div className="rounded-lg border border-border bg-muted/40 px-4 py-4 text-center">
                   <CreditCard className="mx-auto mb-2 h-8 w-8 text-primary" />
+
                   <p className="text-sm font-medium text-foreground">
                     Autenticación con tarjeta RFID/NFC
                   </p>
+
                   <p className="mt-1 text-xs text-muted-foreground">
-                    Presiona el botón y luego acerca tu tarjeta al lector.
+                    Presiona el botón, acerca tu tarjeta al lector e ingresa tu contraseña.
                   </p>
                 </div>
 
@@ -228,8 +279,9 @@ export default function LoginPage() {
                   disabled={loading}
                   className="mt-1 w-full rounded-md bg-primary py-2.5 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary/90 disabled:opacity-60"
                 >
-                  {loading ? 'Esperando logeo con tarjeta...' : 'Logearse con tarjeta'}
+                  {loading ? 'Esperando tarjeta y contraseña...' : 'Logearse con tarjeta'}
                 </button>
+
                 {retryRfid && (
                   <button
                     type="button"

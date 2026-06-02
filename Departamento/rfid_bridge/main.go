@@ -21,12 +21,18 @@ type Config struct {
 	BaudRate       int           `env:"RFID_BAUD" envDefault:"9600"`
 	APIURL         string        `env:"RFID_API_URL" envDefault:"http://localhost:7050/api/v1/auth/login/rfid"`
 	ConnectTimeout time.Duration `env:"RFID_CONNECT_TIMEOUT" envDefault:"60s"`
+
+	// false = si el lector no está conectado, termina altiro.
+	// true  = espera hasta RFID_CONNECT_TIMEOUT.
+	WaitForReader bool `env:"RFID_WAIT_FOR_READER" envDefault:"false"`
 }
 
 var cfg Config
 
 func init() {
-	_ = godotenv.Load(".env", "../.env")
+	if err := godotenv.Load("../.env"); err != nil {
+		fmt.Printf("No se pudo cargar ../.env: %v\n", err)
+	}
 
 	if err := env.Parse(&cfg); err != nil {
 		fmt.Printf("Error al parsear variables de entorno: %v\n", err)
@@ -56,15 +62,31 @@ func sendToBackend(payload RFIDLoginRequest) error {
 	defer resp.Body.Close()
 
 	responseBody, _ := io.ReadAll(resp.Body)
+
 	if resp.StatusCode < 200 || resp.StatusCode >= 300 {
 		return fmt.Errorf("login RFID falló. Status: %d, Body: %s", resp.StatusCode, string(responseBody))
 	}
 
-	fmt.Println("\n--- Respuesta del backend ---")
+	fmt.Println("--- Respuesta del backend ---")
 	fmt.Println("Status:", resp.StatusCode)
 	fmt.Println("RFID_LOGIN_RESPONSE:" + string(responseBody))
 
 	return nil
+}
+
+func handleBackendError(err error) {
+	fmt.Println("RFID_LOGIN_ERROR:", err)
+
+	errText := err.Error()
+
+	if strings.Contains(errText, "Status: 401") ||
+		strings.Contains(errText, "invalid credentials") {
+		fmt.Println("RFID_INVALID_CREDENTIALS")
+		os.Exit(2)
+	}
+
+	fmt.Println("RFID_BACKEND_ERROR")
+	os.Exit(3)
 }
 
 func main() {
@@ -75,16 +97,15 @@ func main() {
 
 	if modeArg == "--mock" || modeArg == "mock" {
 		fmt.Println("Modo mock RFID iniciado")
+		fmt.Println("Backend:", cfg.APIURL)
 
 		payload := RFIDLoginRequest{
-			UID: "234BA711",
-			PIN: "1234",
+			UID: "UID-URG-001",
+			PIN: "hash_pin_1",
 		}
 
-		err := sendToBackend(payload)
-		if err != nil {
-			fmt.Println("RFID_LOGIN_ERROR:", err)
-			return
+		if err := sendToBackend(payload); err != nil {
+			handleBackendError(err)
 		}
 
 		fmt.Println("RFID_LOGIN_SUCCESS")
@@ -93,7 +114,7 @@ func main() {
 
 	if modeArg != "serve" {
 		fmt.Println("Modo desconocido:", modeArg)
-		return
+		os.Exit(1)
 	}
 
 	fmt.Println("Bridge RFID iniciado")
@@ -101,7 +122,9 @@ func main() {
 	fmt.Println("Backend:", cfg.APIURL)
 
 	deadline := time.Now().Add(cfg.ConnectTimeout)
+
 	var port io.ReadCloser
+
 	for {
 		serialMode := &serial.Mode{
 			BaudRate: cfg.BaudRate,
@@ -109,13 +132,20 @@ func main() {
 
 		p, err := serial.Open(cfg.SerialPort, serialMode)
 		if err != nil {
+			fmt.Println("No esta conectado el lector RFID/NFC")
+			fmt.Println("RFID_READER_NOT_CONNECTED")
+
+			if !cfg.WaitForReader {
+				os.Exit(1)
+			}
+
 			if time.Now().After(deadline) {
 				fmt.Println("No esta conectado el lector, tiempo de espera agotado")
 				fmt.Println("RFID_CONNECTION_TIMEOUT")
 				os.Exit(1)
 			}
 
-			fmt.Println("No esta conectado el lector, esperando conexion...")
+			fmt.Println("Esperando conexion con el lector...")
 			time.Sleep(2 * time.Second)
 			continue
 		}
@@ -123,6 +153,7 @@ func main() {
 		port = p
 		break
 	}
+
 	defer port.Close()
 
 	fmt.Println("Esperando datos del Arduino...")
@@ -144,8 +175,7 @@ func main() {
 
 		var payload RFIDLoginRequest
 
-		err := json.Unmarshal([]byte(line), &payload)
-		if err != nil {
+		if err := json.Unmarshal([]byte(line), &payload); err != nil {
 			fmt.Println("JSON inválido:", err)
 			continue
 		}
@@ -158,10 +188,8 @@ func main() {
 		fmt.Println("UID:", payload.UID)
 		fmt.Println("PIN:", payload.PIN)
 
-		err = sendToBackend(payload)
-		if err != nil {
-			fmt.Println("RFID_LOGIN_ERROR:", err)
-			continue
+		if err := sendToBackend(payload); err != nil {
+			handleBackendError(err)
 		}
 
 		fmt.Println("RFID_LOGIN_SUCCESS")
@@ -170,5 +198,10 @@ func main() {
 
 	if err := scanner.Err(); err != nil {
 		fmt.Println("Error leyendo serial:", err)
+		fmt.Println("RFID_SERIAL_ERROR")
+		os.Exit(1)
 	}
+
+	fmt.Println("RFID_SERIAL_CLOSED")
+	os.Exit(1)
 }
