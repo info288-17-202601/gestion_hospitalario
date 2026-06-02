@@ -220,7 +220,7 @@ INSERT INTO alerts (type, message, status, supply_id, department_id) VALUES
 -- 8. Tarjetas RFID asociadas a usuarios
 INSERT INTO rfid_cards (user_id, uid, is_active) VALUES
 (1, 'UID-URG-001', true),
-(2, 'UID-FAR-002', true),
+(2, '234BA711', true), -- Usuario con UID simple para pruebas
 (3, 'UID-UCI-003', true),
 (4, 'UID-URG-004', true),
 (5, 'UID-PED-005', true),
@@ -232,7 +232,7 @@ INSERT INTO rfid_cards (user_id, uid, is_active) VALUES
 -- 9. PIN hasheado de prueba (Simulando '1234' o similar)
 INSERT INTO user_pin_credentials (user_id, pin_hash) VALUES
 (1, 'hash_pin_1'),
-(2, 'hash_pin_2'),
+(2, '1234'), -- Usuario con PIN simple para pruebas 
 (3, 'hash_pin_3'),
 (4, 'hash_pin_4'),
 (5, 'hash_pin_5'),
@@ -240,3 +240,5 @@ INSERT INTO user_pin_credentials (user_id, pin_hash) VALUES
 (7, 'hash_pin_7'),
 (8, 'hash_pin_8'),
 (9, 'hash_pin_9');
+
+
