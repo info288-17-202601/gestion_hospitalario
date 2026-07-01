@@ -22,6 +22,8 @@ services:
       - "8010:8010"
     environment:
       - TZ=America/Santiago
+    env_file:
+      - ./Departamento/.env
     restart: unless-stopped
     networks:
       - hospital_network
