@@ -41,7 +41,7 @@ export type User = {
   password_hash?: string
 }
 
-export type AlertType = 'bajo_stock' | 'error_sistema' | 'autenticacion' | 'inventario'
+export type AlertType = 'bajo_stock' | 'low_stock' | 'error_sistema' | 'autenticacion' | 'inventario'
 export type AlertStatus = 'pendiente' | 'revisada' | 'resuelta'
 
 export type Alert = {

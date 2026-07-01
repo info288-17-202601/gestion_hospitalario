@@ -3,12 +3,12 @@
 import { useEffect, useState } from 'react'
 import { CheckCheck, Eye } from 'lucide-react'
 import { StatusBadge } from '@/components/status-badge'
-import { getDepartments, getSupplies } from '@/lib/services'
 import { toast } from '@/hooks/use-toast'
 import type { Alert, AlertStatus, Department, Supply } from '@/lib/types'
 
 const alertTypeLabels: Record<string, string> = {
   bajo_stock: 'Bajo stock',
+  low_stock: 'Bajo stock',
   error_sistema: 'Error sistema',
   autenticacion: 'Autenticación',
   inventario: 'Inventario',
@@ -37,6 +37,17 @@ export default function AlertasPage() {
   }
 
   useEffect(() => {
+    const fetchReportData = async <T,>(path: string): Promise<T[]> => {
+      try {
+        const res = await fetch(`http://localhost:7020/api/reports/${path}`)
+        if (!res.ok) throw new Error(`Error fetching ${path}`)
+        return await res.json()
+      } catch (error) {
+        console.error(error)
+        return []
+      }
+    }
+
     const fetchAlerts = async () => {
       try {
         const res = await fetch('http://localhost:7030/api/v1/alert')
@@ -53,7 +64,11 @@ export default function AlertasPage() {
       }
     }
 
-    Promise.all([fetchAlerts(), getDepartments(), getSupplies()]).then(([al, dp, sp]) => {
+    Promise.all([
+      fetchAlerts(),
+      fetchReportData<Department>('departments'),
+      fetchReportData<Supply>('supplies'),
+    ]).then(([al, dp, sp]) => {
       setAlerts(al)
       setDepartments(dp)
       setSupplies(sp)
@@ -97,6 +112,8 @@ export default function AlertasPage() {
 
   const getSupplyName = (id: number | null) => id ? supplies.find((s) => s.id === id)?.name ?? '-' : '-'
   const getDeptName = (id: number | null) => id ? departments.find((d) => d.id === id)?.name ?? '-' : '-'
+  const getAlertVariant = (type: string) =>
+    type === 'low_stock' || type === 'bajo_stock' ? 'bajo_stock_type' : type
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 
@@ -160,7 +177,7 @@ export default function AlertasPage() {
                 <tr key={al.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors last:border-0">
                   <td className="px-4 py-3">
                     <StatusBadge
-                      variant={al.type as 'bajo_stock_type' | 'autenticacion' | 'inventario' | 'error_sistema'}
+                      variant={getAlertVariant(al.type) as 'bajo_stock_type' | 'autenticacion' | 'inventario' | 'error_sistema'}
                       label={alertTypeLabels[al.type] ?? al.type}
                     />
                   </td>
