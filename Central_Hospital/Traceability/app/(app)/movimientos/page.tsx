@@ -1,17 +1,17 @@
 'use client'
 
 import { useEffect, useState } from 'react'
-import { Plus } from 'lucide-react'
+import { AlertTriangle, Plus } from 'lucide-react'
 import { StatusBadge } from '@/components/status-badge'
 import { FormModal } from '@/components/form-modal'
-import { getInventoryMovements, getDepartments, getSupplies, getUsers, createMovement } from '@/lib/services'
-import type { InventoryMovement, Department, Supply, User, MovementType } from '@/lib/types'
+import type { InventoryMovement, Department, Supply, User, MovementType, DepartmentInventory } from '@/lib/types'
 
 export default function MovimientosPage() {
   const [movements, setMovements] = useState<InventoryMovement[]>([])
   const [departments, setDepartments] = useState<Department[]>([])
   const [supplies, setSupplies] = useState<Supply[]>([])
   const [users, setUsers] = useState<User[]>([])
+  const [inventory, setInventory] = useState<DepartmentInventory[]>([])
   const [modalOpen, setModalOpen] = useState(false)
 
   // Form state
@@ -36,28 +36,31 @@ export default function MovimientosPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const [mvRes, deptRes, supRes, userRes] = await Promise.all([
+        const [mvRes, deptRes, supRes, userRes, invRes] = await Promise.all([
           fetch('http://localhost:7020/api/reports/movements'),
           fetch('http://localhost:7020/api/reports/departments'),
           fetch('http://localhost:7020/api/reports/supplies'),
-          fetch('http://localhost:7020/api/reports/users')
+          fetch('http://localhost:7020/api/reports/users'),
+          fetch('http://localhost:7020/api/reports/inventory')
         ])
 
-        if (!mvRes.ok || !deptRes.ok || !supRes.ok || !userRes.ok) {
+        if (!mvRes.ok || !deptRes.ok || !supRes.ok || !userRes.ok || !invRes.ok) {
           throw new Error('Error fetching data')
         }
 
-        const [mv, dp, sp, us] = await Promise.all([
+        const [mv, dp, sp, us, inv] = await Promise.all([
           mvRes.json(),
           deptRes.json(),
           supRes.json(),
-          userRes.json()
+          userRes.json(),
+          invRes.json()
         ])
 
         setMovements(mv)
         setDepartments(dp)
         setSupplies(sp)
         setUsers(us)
+        setInventory(inv)
       } catch (error) {
         console.error(error)
       }
@@ -76,8 +79,52 @@ export default function MovimientosPage() {
   const formatDate = (iso: string) =>
     new Date(iso).toLocaleDateString('es-CL', { day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit' })
 
+  const getLowStockWarning = () => {
+    if (form.type !== 'transferencia') return null
+
+    const supplyId = Number(form.supply_id)
+    const sourceDepartmentId = Number(form.source_department_id)
+    const quantity = Number(form.quantity)
+
+    if (!Number.isFinite(supplyId) || !Number.isFinite(sourceDepartmentId) || !Number.isFinite(quantity) || quantity <= 0) {
+      return null
+    }
+
+    const selectedSupply = supplies.find((s) => s.id === supplyId)
+    const selectedDepartment = departments.find((d) => d.id === sourceDepartmentId)
+    const selectedInventory = inventory.find((inv) => inv.department_id === sourceDepartmentId && inv.supply_id === supplyId)
+
+    if (!selectedSupply || !selectedDepartment || !selectedInventory) return null
+
+    const minimumStock = selectedInventory.minimum_stock || selectedSupply.minimum_stock
+    const projectedStock = selectedInventory.quantity - quantity
+
+    if (selectedInventory.quantity < minimumStock) {
+      return {
+        title: 'El departamento origen ya tiene bajo stock',
+        message: `${selectedSupply.name} tiene ${selectedInventory.quantity} unidades en ${selectedDepartment.name}, bajo el mínimo de ${minimumStock}. Después de transferir quedará con ${projectedStock} unidades.`,
+      }
+    }
+
+    if (projectedStock < minimumStock) {
+      return {
+        title: 'Esta transferencia dejará bajo stock',
+        message: `${selectedSupply.name} quedará con ${projectedStock} unidades en ${selectedDepartment.name}, bajo el mínimo de ${minimumStock}.`,
+      }
+    }
+
+    return null
+  }
+
+  const lowStockWarning = getLowStockWarning()
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+
+    if (lowStockWarning) {
+      const shouldContinue = window.confirm(`${lowStockWarning.title}\n\n${lowStockWarning.message}\n\n¿Deseas registrar la transferencia de todas formas?`)
+      if (!shouldContinue) return
+    }
     
     const payload = {
       type: form.type,
@@ -97,8 +144,10 @@ export default function MovimientosPage() {
       })
 
       if (!res.ok) throw new Error('Error creating movement')
-      
+
       const newMv = await res.json()
+      const inventoryRes = await fetch('http://localhost:7020/api/reports/inventory')
+      if (inventoryRes.ok) setInventory(await inventoryRes.json())
       setMovements((prev) => [newMv, ...prev])
       setModalOpen(false)
       setForm({ type: 'entrada', supply_id: '', quantity: '', user_id: '', source_department_id: '', destination_department_id: '', observations: '' })
@@ -226,6 +275,16 @@ export default function MovimientosPage() {
               </div>
             )}
           </div>
+
+          {lowStockWarning && (
+            <div className="flex gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
+              <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+              <div className="space-y-1 text-sm">
+                <p className="font-medium">{lowStockWarning.title}</p>
+                <p>{lowStockWarning.message}</p>
+              </div>
+            </div>
+          )}
 
           <div>
             <label className={labelClass}>Observaciones</label>

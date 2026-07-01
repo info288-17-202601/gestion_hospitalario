@@ -1,10 +1,10 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { PlusCircle, CheckCircle } from 'lucide-react'
+import { AlertTriangle, PlusCircle, CheckCircle } from 'lucide-react'
 import { departments } from '@/lib/mock-data'
 import { getDepartmentInventory, getSupplies, createMovement, modifyDepartmentStock } from '@/lib/services'
-import type { DepartmentInventory, InventoryMovement, Supply } from '@/lib/types'
+import type { DepartmentInventory, Supply } from '@/lib/types'
 
 type MovementType = 'entrada' | 'salida' | 'transferencia'
 
@@ -44,6 +44,34 @@ export default function NodeRegistrarMovimientoPage() {
   }, [])
 
   const localInventory = inventory
+  const selectedSupplyId = Number(supplyId)
+  const requestedQuantity = Number(quantity)
+  const selectedSupply = supplies.find((s) => s.id === selectedSupplyId)
+  const selectedInventory = localInventory.find((inv) => inv.supply_id === selectedSupplyId)
+  const lowStockWarning = (() => {
+    if (type !== 'transferencia' || !selectedInventory || !selectedSupply || !Number.isFinite(requestedQuantity) || requestedQuantity <= 0) {
+      return null
+    }
+
+    const minimumStock = selectedInventory.minimum_stock || selectedSupply.minimum_stock
+    const projectedStock = selectedInventory.quantity - requestedQuantity
+
+    if (selectedInventory.quantity < minimumStock) {
+      return {
+        title: 'El departamento origen ya tiene bajo stock',
+        message: `${selectedSupply.name} tiene ${selectedInventory.quantity} unidades en ${dept.name}, bajo el mínimo de ${minimumStock}. Después de transferir quedará con ${projectedStock} unidades.`,
+      }
+    }
+
+    if (projectedStock < minimumStock) {
+      return {
+        title: 'Esta transferencia dejará bajo stock',
+        message: `${selectedSupply.name} quedará con ${projectedStock} unidades en ${dept.name}, bajo el mínimo de ${minimumStock}.`,
+      }
+    }
+
+    return null
+  })()
   const availableSupplies = supplies.filter((s) => {
     if (!s.is_active) return false
     return type === 'entrada'
@@ -54,8 +82,13 @@ export default function NodeRegistrarMovimientoPage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const supplyIdNumber = parseInt(supplyId, 10)
-    const quantityNumber = parseInt(quantity, 10)
+    const supplyIdNumber = Number(supplyId)
+    const quantityNumber = Number(quantity)
+
+    if (lowStockWarning) {
+      const shouldContinue = window.confirm(`${lowStockWarning.title}\n\n${lowStockWarning.message}\n\n¿Deseas registrar la transferencia de todas formas?`)
+      if (!shouldContinue) return
+    }
 
     try {
       if (type === 'transferencia') {
@@ -77,6 +110,8 @@ export default function NodeRegistrarMovimientoPage() {
         })
       }
 
+      const updatedInventory = await getDepartmentInventory()
+      setInventory(updatedInventory)
       setSuccess(true)
       setTimeout(() => {
         setSuccess(false)
@@ -189,12 +224,22 @@ export default function NodeRegistrarMovimientoPage() {
                     className="w-full rounded-md border border-input bg-background px-4 py-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
                   >
                     <option value="">Seleccionar departamento</option>
-                    {departments.filter((d) => d.id !== deptId && d.is_active).map((d) => (
+                    {otherDepartments.map((d) => (
                       <option key={d.id} value={d.id}>
                         {d.name}
                       </option>
                     ))}
                   </select>
+                </div>
+              )}
+
+              {lowStockWarning && (
+                <div className="flex gap-3 rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-amber-900">
+                  <AlertTriangle className="mt-0.5 h-4 w-4 shrink-0" />
+                  <div className="space-y-1 text-sm">
+                    <p className="font-medium">{lowStockWarning.title}</p>
+                    <p>{lowStockWarning.message}</p>
+                  </div>
                 </div>
               )}
 
