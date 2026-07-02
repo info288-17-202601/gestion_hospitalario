@@ -12,7 +12,7 @@ func SetupRouter() *gin.Engine {
 
 	// CORS policy
 	router.Use(cors.New(cors.Config{
-		AllowOrigins:     []string{"http://localhost:8010", "http://localhost:8020", "http://localhost", "http://api.hospital.cl"},
+		AllowOrigins:     []string{"http://localhost:8010", "http://localhost:8020", "http://localhost", "http://api.hospital.cl", "http://traceability.hospital.cl"},
 		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
 		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
 		ExposeHeaders:    []string{"Content-Length"},
