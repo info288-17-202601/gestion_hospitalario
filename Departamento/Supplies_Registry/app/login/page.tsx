@@ -47,19 +47,19 @@ export default function LoginPage() {
       if (result.success) {
         const sessionUser = result.user
           ? {
-              id: result.user.id,
-              name: result.user.name,
-              role: result.user.role as any,
-              department: `Departamento ${result.user.department_id}`,
-              rut: '',
-            }
+            id: result.user.id,
+            name: result.user.name,
+            role: result.user.role as any,
+            department: `Departamento ${result.user.department_id}`,
+            rut: '',
+          }
           : {
-              id: 0,
-              name: 'Usuario RFID',
-              role: 'Farmacéutico',
-              department: 'RFID',
-              rut: '',
-            }
+            id: 0,
+            name: 'Usuario RFID',
+            role: 'Farmacéutico',
+            department: 'RFID',
+            rut: '',
+          }
 
         sessionStorage.setItem('sghd_user', JSON.stringify(sessionUser))
 
@@ -146,7 +146,7 @@ export default function LoginPage() {
           </h1>
 
           <p className="mt-1 text-sm text-muted-foreground">
-            Distribuido &mdash; Proyecto Semestral
+            Departamento
           </p>
         </div>
 
@@ -160,11 +160,10 @@ export default function LoginPage() {
                 setMessage(null)
                 setRetryRfid(false)
               }}
-              className={`flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-medium transition-colors disabled:opacity-60 ${
-                tab === 'password'
+              className={`flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-medium transition-colors disabled:opacity-60 ${tab === 'password'
                   ? 'border-b-2 border-primary text-primary bg-primary/5'
                   : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-              }`}
+                }`}
             >
               <User className="h-4 w-4" />
               Acceso Tradicional
@@ -178,11 +177,10 @@ export default function LoginPage() {
                 setMessage(null)
                 setRetryRfid(false)
               }}
-              className={`flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-medium transition-colors disabled:opacity-60 ${
-                tab === 'rfid'
+              className={`flex flex-1 items-center justify-center gap-2 py-3.5 text-sm font-medium transition-colors disabled:opacity-60 ${tab === 'rfid'
                   ? 'border-b-2 border-primary text-primary bg-primary/5'
                   : 'text-muted-foreground hover:text-foreground hover:bg-secondary'
-              }`}
+                }`}
             >
               <CreditCard className="h-4 w-4" />
               RFID / NFC
@@ -192,11 +190,10 @@ export default function LoginPage() {
           <div className="p-6">
             {message && (
               <div
-                className={`mb-5 flex items-center gap-2.5 rounded-lg border px-4 py-3 text-sm ${
-                  message.type === 'error'
+                className={`mb-5 flex items-center gap-2.5 rounded-lg border px-4 py-3 text-sm ${message.type === 'error'
                     ? 'border-red-200 bg-red-50 text-red-700'
                     : 'border-emerald-200 bg-emerald-50 text-emerald-700'
-                }`}
+                  }`}
                 role="alert"
               >
                 {message.type === 'error' ? (
@@ -257,11 +254,6 @@ export default function LoginPage() {
                 >
                   {loading ? 'Verificando...' : 'Ingresar'}
                 </button>
-
-                <p className="text-center text-xs text-muted-foreground">
-                  Demo: RUT <span className="font-mono">12.345.678-9</span> / contraseña{' '}
-                  <span className="font-mono">1234</span>
-                </p>
               </form>
             ) : (
               <form onSubmit={handleRfidLogin} className="flex flex-col gap-4">
