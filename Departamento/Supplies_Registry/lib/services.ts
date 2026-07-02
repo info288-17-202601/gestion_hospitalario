@@ -39,22 +39,36 @@ import type {
 export async function loginWithPassword(
   rut: string,
   password: string
-): Promise<{ success: boolean; user?: SessionUser; reason?: string }> {
-  const cred = mockCredentials.find((c) => c.rut === rut && c.password === password)
-  if (!cred) return { success: false, reason: 'Credenciales inválidas' }
-  const user = users.find((u) => u.id === cred.userId)
-  if (!user) return { success: false, reason: 'Usuario no encontrado' }
-  if (!user.is_active) return { success: false, reason: 'Usuario inactivo' }
-  const dept = departments.find((d) => d.id === user.department_id)
-  return {
-    success: true,
-    user: {
-      id: user.id,
-      name: `${user.first_name} ${user.last_name}`,
-      role: user.role,
-      department: dept?.name ?? 'Sin departamento',
-      rut: user.rut,
-    },
+): Promise<{ success: boolean; user?: SessionUser; reason?: string; token?: string }> {
+  try {
+    const departmentId = parseInt(process.env.NEXT_PUBLIC_DEPARTMENT_ID || '1', 10)
+    const AUTH_API = process.env.NEXT_PUBLIC_AUTH_API_BASE || 'http://localhost:7050/api/v1/auth'
+    const res = await fetch(`${AUTH_API}/login/classic`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ rut, password, target_department_id: departmentId }),
+    })
+
+    if (!res.ok) {
+      const errorData = await res.json().catch(() => ({}))
+      return { success: false, reason: errorData.detail || 'Credenciales inválidas' }
+    }
+
+    const data = await res.json()
+
+    return {
+      success: true,
+      token: data.access_token,
+      user: {
+        id: data.user.id,
+        name: data.user.name,
+        role: data.user.role,
+        department: `Departamento ${departmentId}`,
+        rut: rut,
+      },
+    }
+  } catch (error: any) {
+    return { success: false, reason: 'Error de conexión' }
   }
 }
 
@@ -62,22 +76,10 @@ export async function loginWithRfid(
   uid: string,
   pin: string
 ): Promise<{ success: boolean; user?: SessionUser; reason?: string }> {
-  const cred = mockRfidCredentials.find((c) => c.uid === uid && c.pin === pin)
-  if (!cred) return { success: false, reason: 'UID o PIN inválido' }
-  const user = users.find((u) => u.id === cred.userId)
-  if (!user) return { success: false, reason: 'Usuario no encontrado' }
-  if (!user.is_active) return { success: false, reason: 'Usuario inactivo' }
-  const dept = departments.find((d) => d.id === user.department_id)
-  return {
-    success: true,
-    user: {
-      id: user.id,
-      name: `${user.first_name} ${user.last_name}`,
-      role: user.role,
-      department: dept?.name ?? 'Sin departamento',
-      rut: user.rut,
-    },
-  }
+  // En Supplies_Registry, la validación se hace a través de rfid_bridge.
+  // Cuando rfid_bridge retorna éxito, rfid-actions extraerá el token
+  // y llamará a persistSession (o similar). No es necesario llamar a la API desde aquí.
+  return { success: false, reason: 'Llamar a rfid-actions directamente' }
 }
 
 // ---- Categories ----

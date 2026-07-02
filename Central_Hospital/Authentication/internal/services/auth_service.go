@@ -61,6 +61,18 @@ func (s *AuthService) LoginClassic(req schemas.LoginClassicRequest) (string, *mo
 		}
 	}
 
+	if req.TargetDepartmentID == 8 {
+		if user.Role != "Administrador" {
+			s.logAuth(&user.ID, "CLASSIC", req.Rut, false, "Not an administrator")
+			return "", nil, errors.New("access denied: administrators only")
+		}
+	} else {
+		if user.DepartmentID != req.TargetDepartmentID {
+			s.logAuth(&user.ID, "CLASSIC", req.Rut, false, "Unauthorized for this department")
+			return "", nil, errors.New("unauthorized for this department")
+		}
+	}
+
 	if !user.IsActive {
 		s.logAuth(&user.ID, "CLASSIC", req.Rut, false, "Inactive user")
 		return "", nil, errors.New("user is inactive")
@@ -98,6 +110,11 @@ func (s *AuthService) LoginRFID(req schemas.LoginRFIDRequest) (string, *models.U
 			s.logAuth(&rfid.User.ID, "RFID", req.Uid, false, "Invalid PIN")
 			return "", nil, errors.New("invalid credentials")
 		}
+	}
+
+	if rfid.User.DepartmentID != req.TargetDepartmentID {
+		s.logAuth(&rfid.User.ID, "RFID", req.Uid, false, "Unauthorized for this department")
+		return "", nil, errors.New("unauthorized for this department")
 	}
 
 	s.logAuth(&rfid.User.ID, "RFID", req.Uid, true, "Success")

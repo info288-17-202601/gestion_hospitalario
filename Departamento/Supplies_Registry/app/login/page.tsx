@@ -118,6 +118,9 @@ export default function LoginPage() {
       })
 
       sessionStorage.setItem('sghd_user', JSON.stringify(result.user))
+      if (result.token) {
+        sessionStorage.setItem('sghd_token', result.token)
+      }
 
       setTimeout(() => {
         router.push('/nodo/inventario')

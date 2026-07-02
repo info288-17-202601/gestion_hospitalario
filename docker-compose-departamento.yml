@@ -16,7 +16,10 @@ services:
 
   supplies_registry:
     image: supplies_registry
-    build: ./Departamento/Supplies_Registry
+    build:
+      context: ./Departamento/Supplies_Registry
+      args:
+        NEXT_PUBLIC_DEPARTMENT_ID: ${DEPARTMENT_ID:-2}
     container_name: supplies_registry
     ports:
       - "8010:8010"

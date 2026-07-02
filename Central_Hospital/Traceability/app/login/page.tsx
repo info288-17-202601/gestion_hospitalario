@@ -89,6 +89,9 @@ export default function LoginPage() {
     if (result.success && result.user) {
       setMessage({ type: 'success', text: 'Acceso exitoso. Redirigiendo...' })
       sessionStorage.setItem('sghd_user', JSON.stringify(result.user))
+      if (result.token) {
+        sessionStorage.setItem('sghd_token', result.token)
+      }
       setTimeout(() => router.push('/inventario'), 800)
     } else {
       setMessage({ type: 'error', text: result.reason ?? 'Credenciales inválidas' })

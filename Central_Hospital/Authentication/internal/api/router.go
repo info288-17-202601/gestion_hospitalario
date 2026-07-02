@@ -10,6 +10,15 @@ import (
 func SetupRouter() *gin.Engine {
 	router := gin.Default()
 
+	// CORS policy
+	router.Use(cors.New(cors.Config{
+		AllowOrigins:     []string{"http://localhost:8010", "http://localhost:8020", "http://localhost", "http://api.hospital.cl"},
+		AllowMethods:     []string{"GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"},
+		AllowHeaders:     []string{"Origin", "Content-Length", "Content-Type", "Authorization"},
+		ExposeHeaders:    []string{"Content-Length"},
+		AllowCredentials: true,
+	}))
+
 	apiV1 := router.Group("/api/v1")
 	{
 		auth := apiV1.Group("/auth")
@@ -25,16 +34,6 @@ func SetupRouter() *gin.Engine {
 			"service": "Authentication Service",
 		})
 	})
-
-	// CORS police
-	router.Use(cors.New(cors.Config{
-		// [TODO]
-		// Add local frontend url for dev
-		AllowOrigins:  []string{"http://api.hospital.cl", "http://localhost:*"},
-		AllowMethods:  []string{"GET", "POST", "PUT", "DELETE", "OPTIONS"},
-		AllowHeaders:  []string{"*"},
-		ExposeHeaders: []string{"*"},
-	}))
 
 	return router
 }

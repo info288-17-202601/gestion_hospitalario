@@ -156,15 +156,15 @@ SELECT setval('supplies_id_seq', (SELECT MAX(id) FROM supplies));
 
 -- 4. Usuarios (Password hasheado usando el mismo de prueba o uno estandar, asumiendo bcrypt o similar que usa la app)
 INSERT INTO users (id, rut, password, name, last_name, email, phone, role, department_id, is_active) VALUES
-(1, '11111111-1', 'hashed_pass_1', 'Juan', 'Pérez', 'jperez@hospital.cl', '+56912345678', 'Enfermero', 1, true),
-(2, '22222222-2', 'hashed_pass_2', 'María', 'González', 'mgonzalez@hospital.cl', '+56987654321', 'Farmacéutico', 3, true),
-(3, '33333333-3', 'hashed_pass_3', 'Roberto', 'Gómez', 'rgomez@hospital.cl', '+56911223344', 'Médico', 2, true),
-(4, '44444444-4', 'hashed_pass_4', 'Ana', 'Silva', 'asilva@hospital.cl', '+56922334455', 'Médico', 1, true),
-(5, '55555555-5', 'hashed_pass_5', 'Sofía', 'Castillo', 'scastillo@hospital.cl', '+56933445566', 'Pediatra', 4, true),
-(6, '66666666-6', 'hashed_pass_6', 'Paula', 'Medina', 'pmedina@hospital.cl', '+56944556677', 'Matrona', 5, true),
-(7, '77777777-7', 'hashed_pass_7', 'Jorge', 'Castro', 'jcastro@hospital.cl', '+56955667788', 'Tecnólogo Médico', 6, true),
-(8, '88888888-8', 'hashed_pass_8', 'Andrés', 'Torres', 'atorres@hospital.cl', '+56966778899', 'Anestesista', 7, true),
-(9, '99999999-9', 'hashed_pass_9', 'Admin', 'Central', 'admin@hospital.cl', '+56977889900', 'Administrador', 8, true);
+(1, '12345678-1', 'test', 'Juan', 'Pérez', 'jperez@hospital.cl', '+56912345678', 'Enfermero', 1, true),
+(2, '12345678-2', 'test', 'María', 'González', 'mgonzalez@hospital.cl', '+56987654321', 'Farmacéutico', 3, true),
+(3, '12345678-3', 'test', 'Roberto', 'Gómez', 'rgomez@hospital.cl', '+56911223344', 'Médico', 2, true),
+(4, '12345678-4', 'test', 'Ana', 'Silva', 'asilva@hospital.cl', '+56922334455', 'Médico', 1, true),
+(5, '12345678-5', 'test', 'Sofía', 'Castillo', 'scastillo@hospital.cl', '+56933445566', 'Pediatra', 4, true),
+(6, '12345678-6', 'test', 'Paula', 'Medina', 'pmedina@hospital.cl', '+56944556677', 'Matrona', 5, true),
+(7, '12345678-7', 'test', 'Jorge', 'Castro', 'jcastro@hospital.cl', '+56955667788', 'Tecnólogo Médico', 6, true),
+(8, '12345678-8', 'test', 'Andrés', 'Torres', 'atorres@hospital.cl', '+56966778899', 'Anestesista', 7, true),
+(9, '12345678-9', 'admin1234', 'Admin', 'Central', 'admin@hospital.cl', '+56977889900', 'Administrador', 8, true);
 SELECT setval('users_id_seq', (SELECT MAX(id) FROM users));
 
 -- 5. Inventario por departamento (Stock inicial)
@@ -232,7 +232,7 @@ INSERT INTO rfid_cards (user_id, uid, is_active) VALUES
 -- 9. PIN hasheado de prueba (Simulando '1234' o similar)
 INSERT INTO user_pin_credentials (user_id, pin_hash) VALUES
 (1, 'hash_pin_1'),
-(2, '1234'), -- Usuario con PIN simple para pruebas 
+(2, '1234'), -- Usuario con PIN simple para pruebas
 (3, 'hash_pin_3'),
 (4, 'hash_pin_4'),
 (5, 'hash_pin_5'),

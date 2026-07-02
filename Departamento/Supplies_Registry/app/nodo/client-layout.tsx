@@ -18,8 +18,9 @@ export function ClientLayout({ children, defaultDeptId }: { children: React.Reac
 
   useEffect(() => {
     const stored = sessionStorage.getItem('sghd_user')
+    const token = sessionStorage.getItem('sghd_token')
     const env = sessionStorage.getItem('sghd_environment')
-    if (!stored || env !== 'nodo') {
+    if (!stored || !token || env !== 'nodo') {
       router.replace('/')
       return
     }
@@ -36,6 +37,7 @@ export function ClientLayout({ children, defaultDeptId }: { children: React.Reac
 
   const handleLogout = () => {
     sessionStorage.removeItem('sghd_user')
+    sessionStorage.removeItem('sghd_token')
     sessionStorage.removeItem('sghd_environment')
     sessionStorage.removeItem('sghd_nodo_department')
     router.push('/')

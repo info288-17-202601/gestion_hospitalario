@@ -25,6 +25,8 @@ type Config struct {
 	// false = si el lector no está conectado, termina altiro.
 	// true  = espera hasta RFID_CONNECT_TIMEOUT.
 	WaitForReader bool `env:"RFID_WAIT_FOR_READER" envDefault:"false"`
+
+	DepartmentID uint `env:"DEPARTMENT_ID"`
 }
 
 var cfg Config
@@ -41,8 +43,9 @@ func init() {
 }
 
 type RFIDLoginRequest struct {
-	UID string `json:"uid"`
-	PIN string `json:"pin"`
+	UID                string `json:"uid"`
+	PIN                string `json:"pin"`
+	TargetDepartmentID uint   `json:"target_department_id"`
 }
 
 func sendToBackend(payload RFIDLoginRequest) error {
@@ -100,8 +103,9 @@ func main() {
 		fmt.Println("Backend:", cfg.APIURL)
 
 		payload := RFIDLoginRequest{
-			UID: "UID-URG-001",
-			PIN: "hash_pin_1",
+			UID:                "UID-URG-001",
+			PIN:                "hash_pin_1",
+			TargetDepartmentID: cfg.DepartmentID,
 		}
 
 		if err := sendToBackend(payload); err != nil {
@@ -187,6 +191,7 @@ func main() {
 
 		fmt.Println("UID:", payload.UID)
 		fmt.Println("PIN:", payload.PIN)
+		payload.TargetDepartmentID = cfg.DepartmentID
 
 		if err := sendToBackend(payload); err != nil {
 			handleBackendError(err)

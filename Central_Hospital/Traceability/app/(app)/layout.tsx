@@ -13,7 +13,8 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const stored = sessionStorage.getItem('sghd_user')
-    if (!stored) {
+    const token = sessionStorage.getItem('sghd_token')
+    if (!stored || !token) {
       router.push('/')
       return
     }
@@ -34,6 +35,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
 
   const handleLogout = () => {
     sessionStorage.removeItem('sghd_user')
+    sessionStorage.removeItem('sghd_token')
     sessionStorage.removeItem('sghd_environment')
     router.push('/')
   }
