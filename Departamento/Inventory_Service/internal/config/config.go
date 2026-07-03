@@ -7,33 +7,37 @@ import (
 )
 
 type Settings struct {
-    ProjectName      string
-    PostgresUser     string
-    PostgresPassword string
-    PostgresServer   string
-    PostgresPort     string
-    PostgresDB       string
-    DepartmentID     uint
-    RabbitMQURL      string
-    RabbitMQQueue    string
+	ProjectName      string
+	PostgresUser     string
+	PostgresPassword string
+	PostgresServer   string
+	PostgresPort     string
+	PostgresDB       string
+	SQLiteDBPath     string
+	SyncTime         string
+	DepartmentID     uint
+	RabbitMQURL      string
+	RabbitMQQueue    string
 }
 
 func (s *Settings) DatabaseURL() string {
-    return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
-        s.PostgresServer, s.PostgresUser, s.PostgresPassword, s.PostgresDB, s.PostgresPort)
+	return fmt.Sprintf("host=%s user=%s password=%s dbname=%s port=%s sslmode=disable TimeZone=UTC",
+		s.PostgresServer, s.PostgresUser, s.PostgresPassword, s.PostgresDB, s.PostgresPort)
 }
 
 func LoadConfig() (*Settings, error) {
-    _ = godotenv.Load(".env")
+	_ = godotenv.Load(".env")
 
-    return &Settings{
-        ProjectName:      getEnv("PROJECT_NAME", "S.G.H - Inventory Service"),
-        PostgresUser:     os.Getenv("POSTGRES_USER"),
-        PostgresPassword: os.Getenv("POSTGRES_PASSWORD"),
-        PostgresServer:   os.Getenv("POSTGRES_SERVER"),
-        PostgresPort:     os.Getenv("POSTGRES_PORT"),
-        PostgresDB:       os.Getenv("POSTGRES_DB"),
-        DepartmentID:     parseUint(os.Getenv("DEPARTMENT_ID"), 1),
+	return &Settings{
+		ProjectName:      getEnv("PROJECT_NAME", "S.G.H - Inventory Service"),
+		PostgresUser:     os.Getenv("POSTGRES_USER"),
+		PostgresPassword: os.Getenv("POSTGRES_PASSWORD"),
+		PostgresServer:   os.Getenv("POSTGRES_SERVER"),
+		PostgresPort:     os.Getenv("POSTGRES_PORT"),
+		PostgresDB:       os.Getenv("POSTGRES_DB"),
+		SQLiteDBPath:     getEnv("SQLITE_DB_PATH", "local_inventory.db"),
+		SyncTime:         getEnv("SYNC_TIME", "23:00"),
+		DepartmentID:     parseUint(os.Getenv("DEPARTMENT_ID"), 1),
         RabbitMQURL:      getEnv("RABBITMQ_URL", "amqp://guest:guest@localhost:7040/"),
         RabbitMQQueue:    getEnv("RABBITMQ_QUEUE", "alert_queue"),
     }, nil

@@ -23,17 +23,32 @@ Although the PostgreSQL database resides centrally, the department backend needs
 ### 2. Department Identity
 * **`DEPARTMENT_ID`**: The unique integer identifier representing this specific hospital department node (e.g., `1`). This restricts inventory actions to the assigned department.
 
-### 3. Messaging Settings (RabbitMQ)
+### 3. Local SQLite Database
+* **`SQLITE_DB_PATH`**: The path to the SQLite local database file (e.g., `/data/local_inventory.db`). Used to store local inventory data for Offline-First operations.
+* **`SYNC_TIME`**: The scheduled daily time in `HH:MM` format (e.g., `23:00` or `18:30`) when the local node synchronizes with the Central PostgreSQL database.
+
+### 4. Messaging Settings (RabbitMQ)
 Used by the Inventory Service to publish alerts to the queue whenever stock drops below the required minimum level:
 * **`RABBITMQ_URL`**: Full AMQP connection URI pointing to the central RabbitMQ broker (e.g., `amqp://guest:guest@rabbitmq:7040/` or `amqp://guest:guest@localhost:7040/`).
 * **`RABBITMQ_QUEUE`**: The destination queue name where low-stock and movement alerts will be published (e.g., `alert_queue`).
 
-### 4. RFID Bridge Settings
+### 5. RFID Bridge Settings
 Used to configure the connection to the physical RFID reader device and the target authentication service:
 * **`RFID_PORT`**: File path to the serial port device where the RFID reader is connected (e.g., `/dev/ttyACM0` or `/dev/ttyUSB0`).
 * **`RFID_BAUD`**: Baud rate for the serial connection (e.g., `9600`).
 * **`RFID_API_URL`**: Endpoint address where RFID authentication requests are processed (e.g., `http://localhost:7050/api/v1/auth/login/rfid`).
 * **`RFID_CONNECT_TIMEOUT`**: Maximum duration allowed to search for and connect to the physical serial port (e.g., `60s` or a number of seconds like `60`).
+
+---
+
+## SQLite Database & Synchronization Design
+
+This service implements an **Offline-First** architecture using a local SQLite database for every department:
+1. **Local Operations**: All inventory reads and updates (stock modification, transfer initiation) write directly to the local SQLite database.
+2. **Fixed-Time Synchronization**: A background worker schedules a synchronization job once a day at the hour specified by `SYNC_TIME` (defaulting to `23:00`). At this scheduled time, both upward and downward sync run.
+3. **Event-Driven Forced Sync**: Whenever a low-stock alert is published to RabbitMQ, an immediate synchronization cycle is **forced**. This ensures that the central dashboard reflects critical inventory state changes in real time.
+4. **Relative Stock Updates (Deltas)**: Changes to Central DB are synchronized as relative additions/subtractions (deltas) instead of absolute stock overrides, preventing conflict between concurrent nodes.
+5. **Downward Catalog Synchronization**: Catalog tables (`supplies`, `supply_category`, `departments`) and external movements/transfers are pulled from Central to the local SQLite DB during every synchronization cycle.
 
 ---
 
@@ -48,6 +63,10 @@ POSTGRES_USER=postgres
 POSTGRES_PASSWORD=postgres
 POSTGRES_SERVER=postgres
 POSTGRES_PORT=6000
+
+# SQLite Local Database
+SQLITE_DB_PATH=/data/local_inventory.db
+SYNC_TIME=23:00
 
 # Department node identifier
 DEPARTMENT_ID=1

@@ -20,3 +20,9 @@ Central_Hospital/Traceability/.next
 *.next
 #departamento 
 Departamento/Supplies_Registry/node_modules
+
+#Sqlite
+Departamento/Inventory_Service/*.db
+
+# Testing
+auxiliar/

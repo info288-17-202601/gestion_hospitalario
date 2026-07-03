@@ -1,15 +1,16 @@
 package main
 
 import (
+	"context"
+	"log"
+
 	"inventory_service/internal/api"
 	"inventory_service/internal/config"
 	"inventory_service/internal/db"
-	"log"
-	
+	"inventory_service/internal/sync"
 
 	_ "inventory_service/docs"
 
-	
 	swaggerFiles "github.com/swaggo/files"
 	ginSwagger "github.com/swaggo/gin-swagger"
 )
@@ -28,6 +29,12 @@ func main() {
 	if err := db.InitDB(cfg); err != nil {
 		log.Fatalf("Failed to initialize database: %v", err)
 	}
+
+	// Initialize and run the sync worker in the background
+	syncWorker := sync.NewSyncWorker(cfg)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+	go syncWorker.Start(ctx)
 
 	router := api.SetupRouter()
 
