@@ -56,7 +56,7 @@ export default function MovimientosPage() {
           invRes.json()
         ])
 
-        const sortedMovements = mv.sort((a: InventoryMovement, b: InventoryMovement) => 
+        const sortedMovements = mv.sort((a: InventoryMovement, b: InventoryMovement) =>
           new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
         )
 
@@ -129,7 +129,7 @@ export default function MovimientosPage() {
       const shouldContinue = window.confirm(`${lowStockWarning.title}\n\n${lowStockWarning.message}\n\n¿Deseas registrar la transferencia de todas formas?`)
       if (!shouldContinue) return
     }
-    
+
     const payload = {
       type: form.type,
       supply_id: Number(form.supply_id),
@@ -188,7 +188,7 @@ export default function MovimientosPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border bg-muted/40 text-muted-foreground">
-                <th className="px-4 py-3 text-left font-medium">ID</th>
+                <th className="px-4 py-3 text-left font-medium">Fecha</th>
                 <th className="px-4 py-3 text-left font-medium">Tipo</th>
                 <th className="px-4 py-3 text-right font-medium">Cantidad</th>
                 <th className="px-4 py-3 text-left font-medium">Insumo</th>
@@ -196,7 +196,6 @@ export default function MovimientosPage() {
                 <th className="px-4 py-3 text-left font-medium">Origen</th>
                 <th className="px-4 py-3 text-left font-medium">Destino</th>
                 <th className="px-4 py-3 text-left font-medium">Observaciones</th>
-                <th className="px-4 py-3 text-left font-medium">Fecha</th>
               </tr>
             </thead>
             <tbody>
@@ -205,7 +204,7 @@ export default function MovimientosPage() {
               )}
               {movements.map((mv) => (
                 <tr key={mv.id} className="border-b border-border/50 hover:bg-muted/30 transition-colors last:border-0">
-                  <td className="px-4 py-3 font-mono text-muted-foreground">#{mv.id}</td>
+                  <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{formatDate(mv.created_at)}</td>
                   <td className="px-4 py-3"><StatusBadge variant={mv.type} /></td>
                   <td className="px-4 py-3 text-right font-mono font-semibold">{mv.quantity}</td>
                   <td className="px-4 py-3">{getSupplyName(mv.supply_id)}</td>
@@ -213,7 +212,7 @@ export default function MovimientosPage() {
                   <td className="px-4 py-3 text-muted-foreground">{getDeptName(mv.source_department_id)}</td>
                   <td className="px-4 py-3 text-muted-foreground">{getDeptName(mv.destination_department_id)}</td>
                   <td className="px-4 py-3 text-muted-foreground max-w-[180px] truncate">{mv.observations || '-'}</td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap">{formatDate(mv.created_at)}</td>
+                  <td className="px-4 py-3 font-mono text-muted-foreground">#{mv.id}</td>
                 </tr>
               ))}
             </tbody>
