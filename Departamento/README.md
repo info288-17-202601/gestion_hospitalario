@@ -80,4 +80,7 @@ RFID_PORT=/dev/ttyACM0
 RFID_BAUD=9600
 RFID_API_URL=http://localhost:7050/api/v1/auth/login/rfid
 RFID_CONNECT_TIMEOUT=60s
+
+NEXT_PUBLIC_AUTH_API_BASE=http://localhost:7050/api/v1/auth
+
 ```
