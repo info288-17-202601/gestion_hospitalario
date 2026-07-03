@@ -56,7 +56,11 @@ export default function MovimientosPage() {
           invRes.json()
         ])
 
-        setMovements(mv)
+        const sortedMovements = mv.sort((a: InventoryMovement, b: InventoryMovement) => 
+          new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+        )
+
+        setMovements(sortedMovements)
         setDepartments(dp)
         setSupplies(sp)
         setUsers(us)
