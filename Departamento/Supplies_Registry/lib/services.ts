@@ -42,7 +42,7 @@ export async function loginWithPassword(
 ): Promise<{ success: boolean; user?: SessionUser; reason?: string; token?: string }> {
   try {
     const departmentId = parseInt(process.env.NEXT_PUBLIC_DEPARTMENT_ID || '1', 10)
-    const AUTH_API = process.env.NEXT_PUBLIC_AUTH_API_BASE || 'http://localhost:7050/api/v1/auth'
+    const AUTH_API = process.env.NEXT_PUBLIC_AUTH_API_BASE
     const res = await fetch(`${AUTH_API}/login/classic`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -252,11 +252,11 @@ function mapDepartmentInventory(item: BackendDepartmentInventory): DepartmentInv
 export async function getDepartmentInventory(): Promise<DepartmentInventory[]> {
   const res = await fetch(`${INVENTORY_API}/departments/stock`)
   const backendData = await handleInventoryResponse<BackendDepartmentInventory[]>(res)
-  
+
   // Get supplies to populate minimum_stock
   const suppliesData = await getSupplies()
   const supplyMap = new Map(suppliesData.map(s => [s.id, s]))
-  
+
   return backendData.map(item => {
     const mapped = mapDepartmentInventory(item)
     const supply = supplyMap.get(item.SupplyID)
