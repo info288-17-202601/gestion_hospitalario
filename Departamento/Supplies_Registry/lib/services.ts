@@ -24,6 +24,7 @@ import type {
   Department,
   Supply,
   User,
+  UserRole,
   Alert,
   AlertStatus,
   DepartmentInventory,
@@ -140,6 +141,7 @@ export async function updateDepartment(id: number, data: Partial<Omit<Department
 }
 
 const INVENTORY_API = process.env.NEXT_PUBLIC_INVENTORY_API_BASE || 'http://localhost:7010/api/v1/inventory'
+const REPORTS_API = process.env.NEXT_PUBLIC_REPORTS_API_BASE || 'http://10.114.137.170:7020/api/reports'
 
 async function handleInventoryResponse<T>(res: Response): Promise<T> {
   if (!res.ok) {
@@ -201,20 +203,74 @@ export async function updateSupply(id: number, data: Partial<Omit<Supply, 'id'>>
 
 // ---- Users ----
 
+type BackendUser = {
+  id: number
+  rut: string
+  first_name: string
+  last_name: string
+  email: string
+  phone: string
+  role: string
+  department_id: number
+  is_active: boolean
+}
+
 export async function getUsers(): Promise<User[]> {
-  return [...users]
+  const res = await fetch(`${REPORTS_API}/users`)
+  const data: BackendUser[] = await handleInventoryResponse(res)
+  return data.map(u => ({
+    id: u.id,
+    rut: u.rut,
+    first_name: u.first_name,
+    last_name: u.last_name,
+    email: u.email,
+    phone: u.phone,
+    role: u.role as UserRole,
+    department_id: u.department_id,
+    is_active: u.is_active,
+  }))
 }
 
 export async function createUser(data: Omit<User, 'id'>): Promise<User> {
-  const item: User = { id: nextId(), ...data }
-  users.push(item)
-  return item
+  const backendData = {
+    rut: data.rut,
+    first_name: data.first_name,
+    last_name: data.last_name,
+    email: data.email,
+    phone: data.phone,
+    role: data.role,
+    department_id: data.department_id,
+    is_active: data.is_active,
+    password: "default_password"
+  }
+  const res = await fetch(`${REPORTS_API}/users`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(backendData),
+  })
+  const created: BackendUser = await handleInventoryResponse(res)
+  return { ...data, id: created.id }
 }
 
 export async function updateUser(id: number, data: Partial<Omit<User, 'id'>>): Promise<User> {
-  const idx = users.findIndex((u) => u.id === id)
-  users[idx] = { ...users[idx], ...data }
-  return users[idx]
+  const backendData: any = {}
+  if (data.rut !== undefined) backendData.rut = data.rut
+  if (data.first_name !== undefined) backendData.first_name = data.first_name
+  if (data.last_name !== undefined) backendData.last_name = data.last_name
+  if (data.email !== undefined) backendData.email = data.email
+  if (data.phone !== undefined) backendData.phone = data.phone
+  if (data.role !== undefined) backendData.role = data.role
+  if (data.department_id !== undefined) backendData.department_id = data.department_id
+  if (data.is_active !== undefined) backendData.is_active = data.is_active
+
+  const res = await fetch(`${REPORTS_API}/users/${id}`, {
+    method: 'PUT',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(backendData),
+  })
+  await handleInventoryResponse(res)
+  const allUsers = await getUsers()
+  return allUsers.find(u => u.id === id) as User
 }
 
 // ---- Alerts ----

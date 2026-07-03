@@ -2,14 +2,15 @@
 
 import { useState, useEffect } from 'react'
 import { StatusBadge } from '@/components/status-badge'
-import { departments, users } from '@/lib/mock-data'
-import { getInventoryMovements, getSupplies } from '@/lib/services'
-import type { InventoryMovement, Supply } from '@/lib/types'
+import { getInventoryMovements, getSupplies, getUsers, getDepartments } from '@/lib/services'
+import type { InventoryMovement, Supply, User, Department } from '@/lib/types'
 
 export default function NodeMovimientosPage() {
   const [filterType, setFilterType] = useState<string>('all')
   const [movements, setMovements] = useState<InventoryMovement[]>([])
   const [supplies, setSupplies] = useState<Supply[]>([])
+  const [users, setUsers] = useState<User[]>([])
+  const [departments, setDepartments] = useState<Department[]>([])
 
   useEffect(() => {
     getInventoryMovements()
@@ -23,6 +24,14 @@ export default function NodeMovimientosPage() {
       .catch((error) => {
         console.error('Error cargando insumos:', error)
       })
+      
+    getUsers()
+      .then(setUsers)
+      .catch((error) => console.error('Error cargando usuarios:', error))
+      
+    getDepartments()
+      .then(setDepartments)
+      .catch((error) => console.error('Error cargando departamentos:', error))
   }, [])
 
   const filteredMovements = filterType === 'all'

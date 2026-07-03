@@ -85,6 +85,14 @@ export default function NodeRegistrarMovimientoPage() {
     const supplyIdNumber = Number(supplyId)
     const quantityNumber = Number(quantity)
 
+    const storedUser = sessionStorage.getItem('sghd_user')
+    let currentUserId = 1
+    if (storedUser) {
+      try {
+        currentUserId = JSON.parse(storedUser).id || 1
+      } catch (e) {}
+    }
+
     if (lowStockWarning) {
       const shouldContinue = window.confirm(`${lowStockWarning.title}\n\n${lowStockWarning.message}\n\n¿Deseas registrar la transferencia de todas formas?`)
       if (!shouldContinue) return
@@ -98,7 +106,7 @@ export default function NodeRegistrarMovimientoPage() {
           source_department_id: deptId,
           destination_department_id: parseInt(destDeptId, 10),
           observations,
-          user_id: 1,
+          user_id: currentUserId,
         })
       } else {
         const quantityChange = type === 'entrada' ? quantityNumber : -quantityNumber
@@ -106,7 +114,7 @@ export default function NodeRegistrarMovimientoPage() {
           supply_id: supplyIdNumber,
           quantity_change: quantityChange,
           observations,
-          user_id: 1,
+          user_id: currentUserId,
         })
       }
 
