@@ -400,6 +400,21 @@ func (w *SyncWorker) syncCatalog(centralDB *gorm.DB, localDB *gorm.DB) {
 			localDB.Save(&dept)
 		}
 	}
+
+	// Sync Department Inventory Snapshot
+	var pendingEvents int64
+	localDB.Model(&models.SyncQueueEvent{}).Where("status = ?", "pending").Count(&pendingEvents)
+	
+	if pendingEvents == 0 {
+		var inventories []models.DepartmentInventory
+		if err := centralDB.Where("department_id = ?", w.cfg.DepartmentID).Find(&inventories).Error; err == nil {
+			for _, inv := range inventories {
+				localDB.Save(&inv)
+			}
+		}
+	} else {
+		log.Printf("[Sync Down] Skipped pulling department_inventory snapshot due to %d pending local events.", pendingEvents)
+	}
 }
 
 func (w *SyncWorker) syncIncomingMovementsAndStock(centralDB *gorm.DB, localDB *gorm.DB) {
@@ -455,40 +470,12 @@ func (w *SyncWorker) syncIncomingMovementsAndStock(centralDB *gorm.DB, localDB *
 		}
 
 		// 2. Adjust local inventory if it affects this department and wasn't initiated by us
-		if m.DestinationDepartmentID != nil && *m.DestinationDepartmentID == departmentID {
-			if m.OriginDepartmentID == nil || *m.OriginDepartmentID != departmentID {
-				// This is an incoming transfer from another department! Update local stock.
-				var inventory models.DepartmentInventory
-				err := txLocal.Where("department_id = ? AND supply_id = ?", departmentID, m.SupplyID).First(&inventory).Error
-				if err != nil {
-					if errors.Is(err, gorm.ErrRecordNotFound) {
-						inventory = models.DepartmentInventory{
-							DepartmentID: departmentID,
-							SupplyID:     m.SupplyID,
-							Quantity:     m.Quantity,
-						}
-						if err := txLocal.Create(&inventory).Error; err != nil {
-							txLocal.Rollback()
-							log.Printf("[Sync Down] Failed to create local inventory: %v", err)
-							return
-						}
-					} else {
-						txLocal.Rollback()
-						log.Printf("[Sync Down] Failed to query local inventory: %v", err)
-						return
-					}
-				} else {
-					inventory.Quantity += m.Quantity
-					if err := txLocal.Save(&inventory).Error; err != nil {
-						txLocal.Rollback()
-						log.Printf("[Sync Down] Failed to save local inventory: %v", err)
-						return
-					}
-				}
-				log.Printf("[Sync Down] Applied remote incoming transfer: added %.2f of supply %d to local inventory.", m.Quantity, m.SupplyID)
-			}
-		}
-
+		// Since we now sync the full department_inventory snapshot in syncCatalog,
+		// we no longer need to manually calculate stock changes here for incoming transfers,
+		// EXCEPT if there are pending events and we skipped the snapshot.
+		// For simplicity and to avoid double-counting, we rely entirely on the snapshot for stock totals.
+		// The local movements table will just act as a history log.
+		
 		if m.ID > maxID {
 			maxID = m.ID
 		}
