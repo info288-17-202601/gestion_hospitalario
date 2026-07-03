@@ -69,7 +69,7 @@ function getFriendlyMessage(fullOutput: string, code: number | null): string {
     fullOutput.includes("No está conectado el lector") ||
     fullOutput.includes("permission denied")
   ) {
-    return "El lector RFID/NFC no está conectado o no se pudo leer. Revisa el Arduino y vuelve a intentar."
+    return "El lector RFID/NFC no está conectado o no se pudo leer. Revisa el lector y vuelve a intentar."
   }
 
   if (
@@ -148,16 +148,50 @@ export async function runRfidBridge(): Promise<RfidBridgeResult> {
       })
     }, 61000)
 
+    const checkOutput = () => {
+      const fullOutput = `${stdout}\n${stderr}`
+
+      if (fullOutput.includes("RFID_LOGIN_SUCCESS")) {
+        const { token, user } = extractLoginResponse(fullOutput)
+        finish({
+          success: true,
+          message: "Login RFID exitoso.",
+          output: fullOutput,
+          token,
+          user,
+        })
+        cleanup()
+        return
+      }
+
+      if (
+        fullOutput.includes("RFID_INVALID_CREDENTIALS") ||
+        fullOutput.includes("RFID_BACKEND_ERROR") ||
+        fullOutput.includes("RFID_READER_NOT_CONNECTED") ||
+        fullOutput.includes("RFID_CONNECTION_TIMEOUT")
+      ) {
+        finish({
+          success: false,
+          message: getFriendlyMessage(fullOutput, null),
+          output: stdout,
+          error: stderr,
+        })
+        cleanup()
+      }
+    }
+
     child.stdout.on("data", (data) => {
       const text = data.toString()
       stdout += text
       console.log("[RFID stdout]", text)
+      checkOutput()
     })
 
     child.stderr.on("data", (data) => {
       const text = data.toString()
       stderr += text
       console.error("[RFID stderr]", text)
+      checkOutput()
     })
 
     child.on("close", (code) => {

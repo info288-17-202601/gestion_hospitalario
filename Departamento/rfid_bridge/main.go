@@ -85,11 +85,9 @@ func handleBackendError(err error) {
 	if strings.Contains(errText, "Status: 401") ||
 		strings.Contains(errText, "invalid credentials") {
 		fmt.Println("RFID_INVALID_CREDENTIALS")
-		os.Exit(2)
+	} else {
+		fmt.Println("RFID_BACKEND_ERROR")
 	}
-
-	fmt.Println("RFID_BACKEND_ERROR")
-	os.Exit(3)
 }
 
 func main() {
@@ -110,6 +108,7 @@ func main() {
 
 		if err := sendToBackend(payload); err != nil {
 			handleBackendError(err)
+			os.Exit(2)
 		}
 
 		fmt.Println("RFID_LOGIN_SUCCESS")
@@ -160,7 +159,7 @@ func main() {
 
 	defer port.Close()
 
-	fmt.Println("Esperando datos del Arduino...")
+	fmt.Println("Esperando datos del lector...")
 
 	scanner := bufio.NewScanner(port)
 
@@ -195,10 +194,10 @@ func main() {
 
 		if err := sendToBackend(payload); err != nil {
 			handleBackendError(err)
+			continue
 		}
 
 		fmt.Println("RFID_LOGIN_SUCCESS")
-		return
 	}
 
 	if err := scanner.Err(); err != nil {
