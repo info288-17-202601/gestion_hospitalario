@@ -10,6 +10,8 @@ services:
       - TZ=America/Santiago
     env_file:
       - ./Departamento/.env
+    volumes:
+      - local_db_data:/data
     restart: unless-stopped
     networks:
       - hospital_network
@@ -35,3 +37,6 @@ services:
 networks:
   hospital_network:
     driver: bridge
+
+volumes:
+  local_db_data:

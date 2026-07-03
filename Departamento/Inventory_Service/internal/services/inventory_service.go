@@ -9,6 +9,7 @@ import (
 	"inventory_service/internal/config"
 	"inventory_service/internal/models"
 	"inventory_service/internal/schemas"
+	"inventory_service/internal/sync"
 
 	amqp "github.com/rabbitmq/amqp091-go"
 	"gorm.io/gorm"
@@ -31,18 +32,30 @@ func (s *InventoryService) ModifyStock(req schemas.StockModificationRequest) (*m
 	cfg, _ := config.LoadConfig()
 	departmentID := cfg.DepartmentID
 
+	tx := s.db.Begin()
+	if tx.Error != nil {
+		return nil, tx.Error
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+		}
+	}()
+
 	var department models.Department
-	if err := s.db.First(&department, departmentID).Error; err != nil {
+	if err := tx.First(&department, departmentID).Error; err != nil {
+		tx.Rollback()
 		return nil, errors.New("Department not found")
 	}
 
 	var supply models.Supply
-	if err := s.db.First(&supply, req.SupplyID).Error; err != nil {
+	if err := tx.First(&supply, req.SupplyID).Error; err != nil {
+		tx.Rollback()
 		return nil, errors.New("Supply not found")
 	}
 
 	var inventory models.DepartmentInventory
-	err := s.db.Where("department_id = ? AND supply_id = ?", departmentID, req.SupplyID).First(&inventory).Error
+	err := tx.Where("department_id = ? AND supply_id = ?", departmentID, req.SupplyID).First(&inventory).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
 			inventory = models.DepartmentInventory{
@@ -50,21 +63,25 @@ func (s *InventoryService) ModifyStock(req schemas.StockModificationRequest) (*m
 				SupplyID:     req.SupplyID,
 				Quantity:     0,
 			}
-			if err := s.db.Create(&inventory).Error; err != nil {
+			if err := tx.Create(&inventory).Error; err != nil {
+				tx.Rollback()
 				return nil, err
 			}
 		} else {
+			tx.Rollback()
 			return nil, err
 		}
 	}
 
 	newQuantity := inventory.Quantity + req.QuantityChange
 	if newQuantity < 0 {
+		tx.Rollback()
 		return nil, errors.New("Insufficient stock for this operation")
 	}
 
 	inventory.Quantity = newQuantity
-	if err := s.db.Save(&inventory).Error; err != nil {
+	if err := tx.Save(&inventory).Error; err != nil {
+		tx.Rollback()
 		return nil, err
 	}
 
@@ -101,7 +118,30 @@ func (s *InventoryService) ModifyStock(req schemas.StockModificationRequest) (*m
 		DestinationDepartmentID: destID,
 	}
 
-	if err := s.db.Create(&movement).Error; err != nil {
+	if err := tx.Create(&movement).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// Queue sync event locally
+	payloadBytes, err := json.Marshal(req)
+	if err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("failed to marshal sync payload: %v", err)
+	}
+
+	syncEvent := models.SyncQueueEvent{
+		ActionType: "modify_stock",
+		Payload:    string(payloadBytes),
+		Status:     "pending",
+	}
+
+	if err := tx.Create(&syncEvent).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	if err := tx.Commit().Error; err != nil {
 		return nil, err
 	}
 
@@ -111,6 +151,11 @@ func (s *InventoryService) ModifyStock(req schemas.StockModificationRequest) (*m
 func (s *InventoryService) RegisterMovement(req schemas.MovementRequest) (*models.InventoryMovement, error) {
 	if req.OriginDepartmentID == req.DestinationDepartmentID {
 		return nil, errors.New("Origin and destination must be different")
+	}
+
+	cfg, _ := config.LoadConfig()
+	if req.OriginDepartmentID != cfg.DepartmentID {
+		return nil, errors.New("origin department must match the configured department for this node")
 	}
 
 	tx := s.db.Begin()
@@ -134,33 +179,9 @@ func (s *InventoryService) RegisterMovement(req schemas.MovementRequest) (*model
 		return nil, errors.New("Insufficient stock in origin department")
 	}
 
-	var destInv models.DepartmentInventory
-	if err := tx.Where("department_id = ? AND supply_id = ?", req.DestinationDepartmentID, req.SupplyID).First(&destInv).Error; err != nil {
-		if errors.Is(err, gorm.ErrRecordNotFound) {
-			destInv = models.DepartmentInventory{
-				DepartmentID: req.DestinationDepartmentID,
-				SupplyID:     req.SupplyID,
-				Quantity:     0,
-			}
-			if err := tx.Create(&destInv).Error; err != nil {
-				tx.Rollback()
-				return nil, err
-			}
-		} else {
-			tx.Rollback()
-			return nil, err
-		}
-	}
-
+	// Decrement origin department stock locally (as it matches this department node)
 	originInv.Quantity -= req.Quantity
-	destInv.Quantity += req.Quantity
-
 	if err := tx.Save(&originInv).Error; err != nil {
-		tx.Rollback()
-		return nil, err
-	}
-
-	if err := tx.Save(&destInv).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}
@@ -176,6 +197,24 @@ func (s *InventoryService) RegisterMovement(req schemas.MovementRequest) (*model
 	}
 
 	if err := tx.Create(&movement).Error; err != nil {
+		tx.Rollback()
+		return nil, err
+	}
+
+	// Queue sync event locally
+	payloadBytes, err := json.Marshal(req)
+	if err != nil {
+		tx.Rollback()
+		return nil, fmt.Errorf("failed to marshal sync payload: %v", err)
+	}
+
+	syncEvent := models.SyncQueueEvent{
+		ActionType: "register_movement",
+		Payload:    string(payloadBytes),
+		Status:     "pending",
+	}
+
+	if err := tx.Create(&syncEvent).Error; err != nil {
 		tx.Rollback()
 		return nil, err
 	}
@@ -267,6 +306,9 @@ func (s *InventoryService) publishAlert(supply models.Supply, department models.
 	}
 
 	log.Printf("[Alert] Stock warning published successfully for supply %s", supply.Name)
+
+	// Force an immediate synchronization so dashboards reflect this alert/stock change in real time
+	sync.TriggerSync()
 }
 // GetCategories returns all supply categories.
 func (s *InventoryService) GetCategories() ([]models.SupplyCategory, error) {
